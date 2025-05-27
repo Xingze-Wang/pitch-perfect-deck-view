@@ -38,19 +38,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
   };
 
   return (
-    <Card className={`p-12 border-2 border-dashed transition-all duration-300 cursor-pointer hover:shadow-lg ${
+    <Card className={`p-16 border-2 border-dashed transition-all duration-300 cursor-pointer group ${
       isDragOver 
-        ? 'border-brand-blue bg-blue-50 shadow-lg' 
-        : 'border-gray-200 hover:border-brand-blue'
-    }`}>
+        ? 'border-blue-500 bg-blue-50/50 shadow-xl scale-105' 
+        : 'border-gray-200 hover:border-blue-400 hover:shadow-lg hover:scale-102'
+    } bg-white/70 backdrop-blur-sm`}>
       <div
         className="text-center"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <div className="w-16 h-16 mx-auto mb-6 bg-gray-50 rounded-full flex items-center justify-center">
-          <Upload className="w-8 h-8 text-gray-400" />
+        <div className={`w-20 h-20 mx-auto mb-8 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+          isDragOver ? 'bg-blue-100' : 'bg-gray-50 group-hover:bg-blue-50'
+        }`}>
+          <Upload className={`w-10 h-10 transition-colors duration-300 ${
+            isDragOver ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-500'
+          }`} />
         </div>
         
         <input
@@ -63,13 +67,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
         
         <label
           htmlFor="file-upload"
-          className="block"
+          className="block cursor-pointer"
         >
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">
+          <div className="space-y-6">
+            <h3 className="text-2xl font-light text-gray-900">
               Drop your deck here
             </h3>
-            <div className="inline-block bg-brand-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-brand-darkblue transition-colors cursor-pointer">
+            <p className="text-gray-500 font-light">
+              PDF, PPT, or PPTX files
+            </p>
+            <div className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
               Choose File
             </div>
           </div>

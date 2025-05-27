@@ -16,22 +16,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="max-w-3xl mx-auto px-6 py-16">
+      <main className="max-w-4xl mx-auto px-6 py-20">
         {!isAnalyzing && !analysisData && (
-          <div className="text-center space-y-12 animate-fade-in">
-            <div className="space-y-6">
-              <h1 className="text-5xl font-light text-gray-900 tracking-tight">
-                Perfect Your Pitch
+          <div className="text-center space-y-16 animate-fade-in">
+            <div className="space-y-8">
+              <h1 className="text-6xl font-extralight text-gray-900 tracking-tight leading-tight">
+                Perfect Your
+                <br />
+                <span className="text-blue-600">Pitch</span>
               </h1>
-              <p className="text-xl text-gray-600 font-light max-w-lg mx-auto">
-                Get instant feedback on your startup presentation
+              <p className="text-xl text-gray-500 font-light max-w-lg mx-auto leading-relaxed">
+                Get AI-powered insights to make your startup presentation irresistible
               </p>
             </div>
             
-            <div className="max-w-md mx-auto">
+            <div className="max-w-lg mx-auto">
               <FileUpload onFileSelect={handleFileSelect} />
             </div>
           </div>
@@ -41,11 +43,11 @@ const Index = () => {
 
         {analysisData && (
           <div className="space-y-8">
-            <div className="flex justify-center">
+            <div className="flex justify-center pb-8">
               <Button 
                 onClick={resetAnalysis}
                 variant="outline"
-                className="border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 px-8 py-3 text-base font-medium"
               >
                 Analyze Another Deck
               </Button>
