@@ -24,13 +24,13 @@ interface AnalysisResultsProps {
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yc-orange';
+    if (score >= 60) return 'text-brand-blue';
     return 'text-red-600';
   };
 
   const getScoreBg = (score: number) => {
     if (score >= 80) return 'bg-green-100';
-    if (score >= 60) return 'bg-orange-100';
+    if (score >= 60) return 'bg-blue-100';
     return 'bg-red-100';
   };
 
@@ -46,7 +46,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
             </span>
           </div>
         </div>
-        <p className="text-yc-gray text-sm mb-4">File: {data.fileName}</p>
+        <p className="text-brand-gray text-sm mb-4">File: {data.fileName}</p>
         
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
@@ -85,8 +85,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
         <ul className="space-y-2">
           {data.insights.map((insight, index) => (
             <li key={index} className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-yc-orange rounded-full mt-2 flex-shrink-0"></div>
-              <span className="text-yc-gray text-sm">{insight}</span>
+              <div className="w-2 h-2 bg-brand-blue rounded-full mt-2 flex-shrink-0"></div>
+              <span className="text-brand-gray text-sm">{insight}</span>
             </li>
           ))}
         </ul>
@@ -94,11 +94,11 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
 
       {/* Recommendations */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">YC-Style Recommendations</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
         <div className="space-y-3">
           {data.recommendations.map((recommendation, index) => (
-            <div key={index} className="p-3 bg-yc-lightgray rounded-lg">
-              <p className="text-sm text-yc-darkgray">{recommendation}</p>
+            <div key={index} className="p-3 bg-brand-lightgray rounded-lg">
+              <p className="text-sm text-brand-darkgray">{recommendation}</p>
             </div>
           ))}
         </div>

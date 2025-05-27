@@ -40,8 +40,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
   return (
     <Card className={`p-12 border-2 border-dashed transition-all duration-300 cursor-pointer hover:shadow-lg ${
       isDragOver 
-        ? 'border-yc-orange bg-orange-50 shadow-lg' 
-        : 'border-gray-200 hover:border-yc-orange'
+        ? 'border-brand-blue bg-blue-50 shadow-lg' 
+        : 'border-gray-200 hover:border-brand-blue'
     }`}>
       <div
         className="text-center"
@@ -69,7 +69,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
             <h3 className="text-lg font-medium text-gray-900">
               Drop your deck here
             </h3>
-            <div className="inline-block bg-yc-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors cursor-pointer">
+            <div className="inline-block bg-brand-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-brand-darkblue transition-colors cursor-pointer">
               Choose File
             </div>
           </div>

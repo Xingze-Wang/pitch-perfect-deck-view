@@ -7,7 +7,7 @@ const LoadingState = () => {
     <Card className="p-16 text-center">
       <div className="animate-fade-in">
         <div className="w-12 h-12 mx-auto mb-6 relative">
-          <div className="w-12 h-12 border-2 border-gray-200 border-t-yc-orange rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin"></div>
         </div>
         <h3 className="text-xl font-light text-gray-900 mb-2">
           Analyzing...

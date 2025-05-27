@@ -26,7 +26,7 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#ff6600',
+					DEFAULT: '#2563eb',
 					foreground: '#ffffff'
 				},
 				secondary: {
@@ -53,8 +53,10 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				yc: {
-					orange: '#ff6600',
+				brand: {
+					blue: '#2563eb',
+					lightblue: '#3b82f6',
+					darkblue: '#1d4ed8',
 					gray: '#666666',
 					lightgray: '#f7f7f7',
 					darkgray: '#333333'

@@ -27,7 +27,7 @@ const Index = () => {
                 Perfect Your Pitch
               </h1>
               <p className="text-xl text-gray-600 font-light max-w-lg mx-auto">
-                Get instant YC-style feedback on your startup presentation
+                Get instant feedback on your startup presentation
               </p>
             </div>
             
@@ -45,7 +45,7 @@ const Index = () => {
               <Button 
                 onClick={resetAnalysis}
                 variant="outline"
-                className="border-yc-orange text-yc-orange hover:bg-yc-orange hover:text-white"
+                className="border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
               >
                 Analyze Another Deck
               </Button>
