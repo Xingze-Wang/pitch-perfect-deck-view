@@ -4,22 +4,17 @@ import { Card } from '@/components/ui/card';
 
 const LoadingState = () => {
   return (
-    <Card className="p-8">
-      <div className="text-center animate-fade-in">
-        <div className="w-16 h-16 mx-auto mb-4 relative">
-          <div className="w-16 h-16 border-4 border-yc-lightgray border-t-yc-orange rounded-full animate-spin"></div>
+    <Card className="p-16 text-center">
+      <div className="animate-fade-in">
+        <div className="w-12 h-12 mx-auto mb-6 relative">
+          <div className="w-12 h-12 border-2 border-gray-200 border-t-yc-orange rounded-full animate-spin"></div>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Analyzing your pitch deck...
+        <h3 className="text-xl font-light text-gray-900 mb-2">
+          Analyzing...
         </h3>
-        <p className="text-yc-gray">
-          Our AI is reviewing your presentation using YC methodology
+        <p className="text-gray-500 font-light">
+          This will take just a moment
         </p>
-        <div className="mt-6 space-y-2">
-          <div className="text-sm text-yc-gray">Checking slide structure...</div>
-          <div className="text-sm text-yc-gray">Evaluating market analysis...</div>
-          <div className="text-sm text-yc-gray">Reviewing financial projections...</div>
-        </div>
       </div>
     </Card>
   );

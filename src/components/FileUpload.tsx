@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
+import { Upload } from 'lucide-react';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -37,10 +38,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
   };
 
   return (
-    <Card className={`p-8 border-2 border-dashed transition-all duration-200 ${
+    <Card className={`p-12 border-2 border-dashed transition-all duration-300 cursor-pointer hover:shadow-lg ${
       isDragOver 
-        ? 'border-yc-orange bg-orange-50' 
-        : 'border-gray-300 hover:border-yc-orange hover:bg-gray-50'
+        ? 'border-yc-orange bg-orange-50 shadow-lg' 
+        : 'border-gray-200 hover:border-yc-orange'
     }`}>
       <div
         className="text-center"
@@ -48,17 +49,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <div className="w-16 h-16 mx-auto mb-4 bg-yc-lightgray rounded-lg flex items-center justify-center">
-          <svg className="w-8 h-8 text-yc-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
+        <div className="w-16 h-16 mx-auto mb-6 bg-gray-50 rounded-full flex items-center justify-center">
+          <Upload className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Upload your pitch deck
-        </h3>
-        <p className="text-yc-gray mb-4">
-          Drag and drop your PDF, or click to browse
-        </p>
+        
         <input
           type="file"
           accept=".pdf,.ppt,.pptx"
@@ -66,15 +60,20 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
           className="hidden"
           id="file-upload"
         />
+        
         <label
           htmlFor="file-upload"
-          className="inline-block bg-yc-orange text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors cursor-pointer"
+          className="block"
         >
-          Choose File
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">
+              Drop your deck here
+            </h3>
+            <div className="inline-block bg-yc-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors cursor-pointer">
+              Choose File
+            </div>
+          </div>
         </label>
-        <p className="text-xs text-yc-gray mt-2">
-          Supports PDF and PowerPoint files
-        </p>
       </div>
     </Card>
   );

@@ -16,58 +16,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-6 py-16">
         {!isAnalyzing && !analysisData && (
-          <div className="space-y-8 animate-fade-in">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Get YC-Style Feedback on Your Pitch
-              </h2>
-              <p className="text-lg text-yc-gray max-w-2xl mx-auto">
-                Upload your pitch deck and receive detailed analysis based on Y Combinator's 
-                proven methodology for evaluating startup presentations.
+          <div className="text-center space-y-12 animate-fade-in">
+            <div className="space-y-6">
+              <h1 className="text-5xl font-light text-gray-900 tracking-tight">
+                Perfect Your Pitch
+              </h1>
+              <p className="text-xl text-gray-600 font-light max-w-lg mx-auto">
+                Get instant YC-style feedback on your startup presentation
               </p>
             </div>
             
-            <FileUpload onFileSelect={handleFileSelect} />
-            
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                What we analyze:
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Problem-solution fit</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Market size and opportunity</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Business model viability</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Team composition and expertise</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Traction and growth metrics</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yc-orange rounded-full"></div>
-                    <span className="text-yc-gray">Financial projections</span>
-                  </div>
-                </div>
-              </div>
+            <div className="max-w-md mx-auto">
+              <FileUpload onFileSelect={handleFileSelect} />
             </div>
           </div>
         )}
@@ -75,9 +40,8 @@ const Index = () => {
         {isAnalyzing && <LoadingState />}
 
         {analysisData && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Analysis Complete</h2>
+          <div className="space-y-8">
+            <div className="flex justify-center">
               <Button 
                 onClick={resetAnalysis}
                 variant="outline"
