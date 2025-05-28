@@ -39,54 +39,61 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <Header />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {!isAnalyzing && !analysisData && (
-          <div className="text-center space-y-12 sm:space-y-16 animate-fade-in">
-            <div className="space-y-6 sm:space-y-8">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extralight text-gray-900 tracking-tight leading-tight">
-                Perfect Your
-                <br />
-                <span className="text-blue-600">Pitch</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-gray-500 font-light max-w-2xl mx-auto leading-relaxed px-4">
-                Get AI-powered insights to analyze your pitch deck and improve your presentation
-              </p>
-            </div>
-            
-            <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8 px-4">
-              <InvestorSelector 
-                selectedType={selectedInvestorType}
-                onTypeChange={handleInvestorTypeChange}
-                isAnalyzing={isAnalyzing}
-              />
-              <FileUpload onFileSelect={handleFileSelect} />
+          <div className="py-12 sm:py-16 lg:py-20">
+            <div className="text-center space-y-8 sm:space-y-12 animate-fade-in">
+              {/* Hero Section */}
+              <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extralight text-gray-900 tracking-tight leading-tight">
+                  Perfect Your
+                  <br />
+                  <span className="text-blue-600">Pitch</span>
+                </h1>
+                <p className="text-base sm:text-lg lg:text-xl text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
+                  Get AI-powered insights to analyze your pitch deck and improve your presentation
+                </p>
+              </div>
+              
+              {/* Content Section */}
+              <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
+                <InvestorSelector 
+                  selectedType={selectedInvestorType}
+                  onTypeChange={handleInvestorTypeChange}
+                  isAnalyzing={isAnalyzing}
+                />
+                <FileUpload onFileSelect={handleFileSelect} />
+              </div>
             </div>
           </div>
         )}
 
-        {isAnalyzing && <LoadingState />}
+        {isAnalyzing && (
+          <div className="py-20">
+            <LoadingState />
+          </div>
+        )}
 
         {analysisData && (
-          <div className="space-y-6 sm:space-y-8">
-            <div className="flex justify-center pb-6 sm:pb-8">
+          <div className="py-8 space-y-8">
+            <div className="flex justify-center">
               <Button 
                 onClick={resetAnalysis}
                 variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium"
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 px-6 py-2 font-medium"
               >
                 Analyze Another Deck
               </Button>
             </div>
             
-            <div className="max-w-5xl mx-auto mb-6 sm:mb-8 px-4">
+            <div className="max-w-5xl mx-auto space-y-6">
               <InvestorSelector 
                 selectedType={analysisData.investorType}
                 onTypeChange={handleInvestorTypeChange}
                 isAnalyzing={isAnalyzing}
               />
+              <AnalysisResults data={analysisData} />
             </div>
-            
-            <AnalysisResults data={analysisData} />
           </div>
         )}
       </main>

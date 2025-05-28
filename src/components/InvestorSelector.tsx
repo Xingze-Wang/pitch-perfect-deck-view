@@ -41,11 +41,11 @@ const InvestorSelector: React.FC<InvestorSelectorProps> = ({
   isAnalyzing 
 }) => {
   return (
-    <Card className="p-4 sm:p-6 bg-white/90 backdrop-blur-sm border-0 shadow-xl rounded-2xl">
-      <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-4 sm:mb-6 text-center">
+    <Card className="p-6 sm:p-8 bg-white/95 backdrop-blur-sm border-0 shadow-xl rounded-2xl">
+      <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-6 sm:mb-8 text-center">
         选择评估视角
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         {investorTypes.map((investor) => {
           const Icon = investor.icon;
           const isSelected = selectedType === investor.type;
@@ -56,20 +56,20 @@ const InvestorSelector: React.FC<InvestorSelectorProps> = ({
               onClick={() => onTypeChange(investor.type)}
               disabled={isAnalyzing}
               variant={isSelected ? 'default' : 'outline'}
-              className={`p-4 sm:p-6 h-auto flex flex-col items-center space-y-3 transition-all duration-300 rounded-xl ${
+              className={`p-6 sm:p-8 h-auto flex flex-col items-center space-y-4 transition-all duration-300 rounded-xl border-2 ${
                 isSelected 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 scale-105 shadow-lg' 
-                  : 'hover:bg-gray-50 border-gray-200 hover:scale-102 hover:shadow-md'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-lg transform scale-105' 
+                  : 'hover:bg-gray-50 border-gray-200 hover:shadow-md hover:scale-102'
               }`}
             >
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isSelected ? 'bg-white/20' : investor.color
               }`}>
-                <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isSelected ? 'text-white' : 'text-white'}`} />
+                <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${isSelected ? 'text-white' : 'text-white'}`} />
               </div>
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <div className="font-medium text-sm sm:text-base">{investor.title}</div>
-                <div className={`text-xs sm:text-sm mt-1 leading-relaxed ${
+                <div className={`text-xs sm:text-sm leading-relaxed ${
                   isSelected ? 'text-blue-100' : 'text-gray-500'
                 }`}>
                   {investor.description}

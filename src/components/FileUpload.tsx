@@ -41,10 +41,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
     <Card className={`p-8 sm:p-12 lg:p-16 border-2 border-dashed transition-all duration-300 cursor-pointer group ${
       isDragOver 
         ? 'border-blue-500 bg-blue-50/50 shadow-xl scale-105' 
-        : 'border-gray-200 hover:border-blue-400 hover:shadow-lg hover:scale-102'
-    } bg-white/90 backdrop-blur-sm rounded-2xl`}>
+        : 'border-gray-300 hover:border-blue-400 hover:shadow-lg hover:scale-[1.02]'
+    } bg-white/95 backdrop-blur-sm rounded-2xl min-h-[300px] sm:min-h-[350px] flex items-center`}>
       <div
-        className="text-center"
+        className="text-center w-full"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -70,13 +70,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
           className="block cursor-pointer"
         >
           <div className="space-y-4 sm:space-y-6">
-            <h3 className="text-xl sm:text-2xl font-light text-gray-900">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-light text-gray-900">
               Drop your deck here
             </h3>
-            <p className="text-gray-500 font-light text-sm sm:text-base">
+            <p className="text-gray-500 font-light text-sm sm:text-base lg:text-lg">
               PDF, PPT, or PPTX files
             </p>
-            <div className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base">
+            <div className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 sm:px-10 lg:px-12 py-3 sm:py-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base">
               Choose File
             </div>
           </div>
