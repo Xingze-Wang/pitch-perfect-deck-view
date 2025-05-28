@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User, Users, GraduationCap } from 'lucide-react';
 import { InvestorType } from '@/services/geminiService';
+import PPTPreview from './PPTPreview';
 
 interface SlideAnalysis {
   slideNumber: number;
@@ -59,48 +61,31 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       <div className="text-center">
-        <div className="flex items-center justify-center space-x-3 mb-2">
-          <h2 className="text-3xl font-light text-gray-900">逐页点评</h2>
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-light text-gray-900">逐页点评</h2>
           <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
             <InvestorIcon className="w-4 h-4 text-gray-600" />
             <span className="text-sm text-gray-600">{getInvestorTitle(investorType)}</span>
           </div>
         </div>
-        <p className="text-gray-500">{fileName}</p>
+        <p className="text-gray-500 text-sm sm:text-base truncate px-4">{fileName}</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8 min-h-[600px]">
+      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left Side - Slide Preview */}
-        <Card className="p-8 bg-gradient-to-br from-gray-50 to-gray-100 border-0 shadow-xl flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-80 h-60 mx-auto bg-white rounded-lg shadow-md flex items-center justify-center border-2 border-gray-200 relative overflow-hidden">
-              <div className="text-center p-4">
-                <div className="text-4xl font-bold text-gray-800 mb-2">
-                  {currentAnalysis.slideNumber}
-                </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  第 {currentAnalysis.slideNumber} 页
-                </div>
-                <div className="space-y-2">
-                  <div className="h-2 bg-gray-200 rounded w-full"></div>
-                  <div className="h-2 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                  <div className="h-2 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500">
-              幻灯片预览（实际应用中会显示真实内容）
-            </p>
-          </div>
-        </Card>
+        <PPTPreview 
+          slideNumber={currentAnalysis.slideNumber}
+          fileName={fileName}
+          className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
+        />
 
         {/* Right Side - Analysis Feedback */}
-        <Card className="p-8 bg-white border-0 shadow-xl">
-          <div className="space-y-6">
+        <Card className="p-4 sm:p-6 lg:p-8 bg-white border-0 shadow-xl rounded-xl">
+          <div className="space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-medium text-gray-900">
+              <h3 className="text-lg sm:text-xl font-medium text-gray-900">
                 第 {currentAnalysis.slideNumber} 页 分析
               </h3>
               <div className="text-sm text-gray-500">
@@ -109,18 +94,18 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
             </div>
 
             {/* Highlight */}
-            <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+            <div className="bg-emerald-50 rounded-xl p-4 sm:p-6 border border-emerald-200">
               <div className="flex items-start space-x-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="font-medium text-emerald-900 mb-2">✓ 本页亮点</h4>
-                  <p className="text-emerald-800 leading-relaxed">{currentAnalysis.highlight}</p>
+                  <p className="text-emerald-800 leading-relaxed text-sm sm:text-base">{currentAnalysis.highlight}</p>
                 </div>
               </div>
             </div>
 
             {/* Risks */}
-            <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+            <div className="bg-red-50 rounded-xl p-4 sm:p-6 border border-red-200">
               <div className="flex items-start space-x-3">
                 <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
@@ -132,11 +117,11 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
                       currentAnalysis.risks.map((risk, index) => (
                         <div key={index} className="flex items-start space-x-2">
                           <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <p className="text-red-800 leading-relaxed">{risk}</p>
+                          <p className="text-red-800 leading-relaxed text-sm sm:text-base">{risk}</p>
                         </div>
                       ))
                     ) : (
-                      <p className="text-red-800 leading-relaxed">暂无风险分析</p>
+                      <p className="text-red-800 leading-relaxed text-sm sm:text-base">暂无风险分析</p>
                     )}
                   </div>
                 </div>
@@ -144,14 +129,14 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
             </div>
 
             {/* Improvements */}
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+            <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200">
               <div className="flex items-start space-x-3">
                 <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="font-medium text-blue-900 mb-2">
                     {investorType === 'mentor' ? '📚 班主任建议' : '▶️ 改进建议'}
                   </h4>
-                  <p className="text-blue-800 leading-relaxed">{currentAnalysis.improvements}</p>
+                  <p className="text-blue-800 leading-relaxed text-sm sm:text-base">{currentAnalysis.improvements}</p>
                 </div>
               </div>
             </div>
@@ -160,12 +145,12 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-center items-center space-x-4">
+      <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
         <Button
           onClick={prevSlide}
           disabled={currentSlide === 0}
           variant="outline"
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 w-full sm:w-auto"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>上一页</span>
@@ -189,7 +174,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
           onClick={nextSlide}
           disabled={currentSlide === slideAnalysis.length - 1}
           variant="outline"
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 w-full sm:w-auto"
         >
           <span>下一页</span>
           <ChevronRight className="w-4 h-4" />
