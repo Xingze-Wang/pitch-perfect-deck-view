@@ -1,8 +1,10 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - use the built-in worker instead of CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url
+).toString();
 
 export interface SlideData {
   slideNumber: number;
@@ -13,11 +15,17 @@ export interface SlideData {
 export class SlideParser {
   static async parsePDF(file: File): Promise<SlideData[]> {
     try {
+      console.log('Starting PDF parsing for:', file.name);
       const arrayBuffer = await file.arrayBuffer();
+      console.log('PDF ArrayBuffer size:', arrayBuffer.byteLength);
+      
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      console.log('PDF loaded, number of pages:', pdf.numPages);
+      
       const slides: SlideData[] = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
+        console.log('Processing page:', i);
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 1.5 });
         
@@ -34,20 +42,31 @@ export class SlideParser {
         const imageUrl = canvas.toDataURL();
         
         // Extract text content
-        const textContent = await page.getTextContent();
-        const text = textContent.items.map((item: any) => item.str).join(' ');
+        try {
+          const textContent = await page.getTextContent();
+          const text = textContent.items.map((item: any) => item.str).join(' ');
+          console.log('Extracted text length for page', i, ':', text.length);
 
-        slides.push({
-          slideNumber: i,
-          imageUrl,
-          text
-        });
+          slides.push({
+            slideNumber: i,
+            imageUrl,
+            text
+          });
+        } catch (textError) {
+          console.warn('Failed to extract text from page', i, ':', textError);
+          slides.push({
+            slideNumber: i,
+            imageUrl,
+            text: ''
+          });
+        }
       }
 
+      console.log('Successfully parsed', slides.length, 'slides');
       return slides;
     } catch (error) {
       console.error('Error parsing PDF:', error);
-      throw new Error('Failed to parse PDF file');
+      throw new Error(`Failed to parse PDF file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -148,6 +167,8 @@ export class SlideParser {
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
+    console.log('Parsing file:', fileName, 'type:', fileType);
+
     if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
       return this.parsePDF(file);
     } else if (
@@ -158,7 +179,7 @@ export class SlideParser {
     ) {
       return this.parsePowerPoint(file);
     } else {
-      throw new Error('Unsupported file type');
+      throw new Error(`Unsupported file type: ${fileType}`);
     }
   }
 }
