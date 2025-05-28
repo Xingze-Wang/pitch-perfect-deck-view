@@ -20,7 +20,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
   const [imageLoaded, setImageLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('PPTPreview - Slide:', slideNumber, 'Image URL exists:', !!slideImageUrl);
+    console.log('PPTPreview - Slide:', slideNumber, 'Image URL length:', slideImageUrl?.length || 0);
     setImageError(false);
     setImageLoaded(false);
   }, [slideNumber, slideImageUrl]);
@@ -32,7 +32,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error('Failed to load image for slide', slideNumber);
+    console.error('Failed to load image for slide', slideNumber, 'Error:', e);
     setImageError(true);
     setImageLoaded(false);
   };
@@ -59,7 +59,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
               <div className="flex items-center justify-center bg-gray-100 rounded-lg min-h-[200px]">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <div className="text-sm text-gray-600">Loading slide...</div>
+                  <div className="text-sm text-gray-600">Loading slide content...</div>
                 </div>
               </div>
             )}
@@ -89,7 +89,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
               <div className="p-6 space-y-4 min-h-[200px] flex flex-col justify-center items-center text-center">
                 <AlertCircle className="w-12 h-12 text-orange-500 mb-2" />
                 <div className="text-sm text-orange-600 font-medium">
-                  Slide content unavailable
+                  Unable to display slide content
                 </div>
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-lg">
                   <span className="text-xl font-bold text-white">{slideNumber}</span>

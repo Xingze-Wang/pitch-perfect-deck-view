@@ -1,7 +1,8 @@
+
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Use local worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/node_modules/pdfjs-dist/build/pdf.worker.min.js';
+// Set worker source to CDN for better reliability
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 export interface SlideData {
   slideNumber: number;
@@ -19,10 +20,7 @@ export class SlideParser {
       
       const pdf = await pdfjsLib.getDocument({
         data: arrayBuffer,
-        verbosity: 0,
-        useWorkerFetch: false,
-        isEvalSupported: false,
-        useSystemFonts: true
+        verbosity: 0
       }).promise;
       
       console.log('PDF document loaded successfully, pages:', pdf.numPages);
@@ -33,7 +31,9 @@ export class SlideParser {
           console.log(`Processing page ${pageNum}...`);
           
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.5 });
+          
+          // Use a higher scale for better quality
+          const viewport = page.getViewport({ scale: 2.0 });
           
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
@@ -45,22 +45,24 @@ export class SlideParser {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           
-          // Render with white background
+          // Set white background
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
           const renderContext = {
             canvasContext: context,
-            viewport: viewport
+            viewport: viewport,
+            intent: 'display'
           };
           
+          // Wait for the page to render completely
           await page.render(renderContext).promise;
           console.log(`Page ${pageNum} rendered successfully`);
           
-          // Convert to high-quality image
-          const imageUrl = canvas.toDataURL('image/png', 1.0);
+          // Convert to base64 data URL with high quality
+          const imageUrl = canvas.toDataURL('image/jpeg', 0.95);
           
-          // Extract text
+          // Extract text content
           let extractedText = '';
           try {
             const textContent = await page.getTextContent();
@@ -68,6 +70,7 @@ export class SlideParser {
               .map((item: any) => item.str || '')
               .filter(str => str.trim().length > 0)
               .join(' ');
+            console.log(`Extracted text from page ${pageNum}:`, extractedText.substring(0, 100) + '...');
           } catch (textError) {
             console.warn(`Text extraction failed for page ${pageNum}:`, textError);
           }
@@ -78,15 +81,12 @@ export class SlideParser {
             text: extractedText
           });
           
-          console.log(`Slide ${pageNum} processed successfully`);
+          console.log(`Slide ${pageNum} processed successfully with image data length:`, imageUrl.length);
           
         } catch (pageError) {
           console.error(`Error processing page ${pageNum}:`, pageError);
-          slides.push({
-            slideNumber: pageNum,
-            imageUrl: this.createFallbackSlide(pageNum),
-            text: `Error loading slide ${pageNum}`
-          });
+          // Only add fallback if we absolutely cannot render the page
+          throw pageError;
         }
       }
       
@@ -94,49 +94,9 @@ export class SlideParser {
       return slides;
       
     } catch (error) {
-      console.error('PDF parsing failed:', error);
-      return this.createFallbackSlides(5);
+      console.error('PDF parsing failed completely:', error);
+      throw new Error(`Failed to parse PDF: ${error.message}`);
     }
-  }
-
-  static createFallbackSlide(slideNumber: number): string {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
-    canvas.width = 800;
-    canvas.height = 600;
-    
-    // White background
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Border
-    context.strokeStyle = '#e5e7eb';
-    context.lineWidth = 2;
-    context.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-    
-    // Content
-    context.fillStyle = '#374151';
-    context.font = 'bold 48px Arial';
-    context.textAlign = 'center';
-    context.fillText(`Slide ${slideNumber}`, canvas.width / 2, canvas.height / 2 - 50);
-    
-    context.font = '24px Arial';
-    context.fillStyle = '#6b7280';
-    context.fillText('Content unavailable', canvas.width / 2, canvas.height / 2 + 20);
-    
-    return canvas.toDataURL('image/png', 1.0);
-  }
-
-  static createFallbackSlides(count: number): SlideData[] {
-    const slides: SlideData[] = [];
-    for (let i = 1; i <= count; i++) {
-      slides.push({
-        slideNumber: i,
-        imageUrl: this.createFallbackSlide(i),
-        text: `Fallback content for slide ${i}`
-      });
-    }
-    return slides;
   }
 
   static async parsePowerPoint(file: File): Promise<SlideData[]> {
@@ -146,11 +106,6 @@ export class SlideParser {
       const arrayBuffer = await file.arrayBuffer();
       const zip = new PizZip(arrayBuffer);
       const slides: SlideData[] = [];
-
-      const relsData = zip.file('ppt/_rels/presentation.xml.rels')?.asText();
-      if (!relsData) {
-        throw new Error('Invalid PowerPoint file structure');
-      }
 
       const slideFiles = Object.keys(zip.files).filter(name => 
         name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
@@ -166,30 +121,28 @@ export class SlideParser {
             .map(match => match.replace(/<\/?[^>]+(>|$)/g, ''))
             .join(' ');
 
+          // Create a simple representation without placeholder text
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d')!;
-          canvas.width = 800;
-          canvas.height = 600;
+          canvas.width = 1024;
+          canvas.height = 768;
           
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
           context.strokeStyle = '#e5e7eb';
-          context.lineWidth = 2;
+          context.lineWidth = 1;
           context.strokeRect(0, 0, canvas.width, canvas.height);
           
-          context.fillStyle = '#1f2937';
-          context.font = 'bold 32px Arial';
-          context.textAlign = 'center';
-          context.fillText(`Slide ${i + 1}`, canvas.width / 2, 80);
-          
           if (text && text.trim()) {
-            context.font = '18px Arial';
+            context.fillStyle = '#1f2937';
+            context.font = '24px Arial';
             context.textAlign = 'left';
-            const words = text.substring(0, 300).split(' ');
+            
+            const words = text.split(' ');
             let line = '';
-            let y = 140;
-            const lineHeight = 28;
+            let y = 60;
+            const lineHeight = 36;
             const maxWidth = canvas.width - 80;
             
             for (const word of words) {
@@ -211,7 +164,7 @@ export class SlideParser {
 
           slides.push({
             slideNumber: i + 1,
-            imageUrl: canvas.toDataURL(),
+            imageUrl: canvas.toDataURL('image/jpeg', 0.95),
             text
           });
         }
@@ -220,7 +173,7 @@ export class SlideParser {
       return slides;
     } catch (error) {
       console.error('Error parsing PowerPoint:', error);
-      return this.createFallbackSlides(5);
+      throw new Error(`Failed to parse PowerPoint: ${error.message}`);
     }
   }
 
@@ -230,22 +183,17 @@ export class SlideParser {
 
     console.log('Parsing file:', fileName, 'type:', fileType);
 
-    try {
-      if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-        return await this.parsePDF(file);
-      } else if (
-        fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
-        fileType === 'application/vnd.ms-powerpoint' ||
-        fileName.endsWith('.pptx') ||
-        fileName.endsWith('.ppt')
-      ) {
-        return await this.parsePowerPoint(file);
-      } else {
-        throw new Error(`Unsupported file type: ${fileType}`);
-      }
-    } catch (error) {
-      console.error('File parsing failed:', error);
-      return this.createFallbackSlides(5);
+    if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+      return await this.parsePDF(file);
+    } else if (
+      fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      fileType === 'application/vnd.ms-powerpoint' ||
+      fileName.endsWith('.pptx') ||
+      fileName.endsWith('.ppt')
+    ) {
+      return await this.parsePowerPoint(file);
+    } else {
+      throw new Error(`Unsupported file type: ${fileType}`);
     }
   }
 }
