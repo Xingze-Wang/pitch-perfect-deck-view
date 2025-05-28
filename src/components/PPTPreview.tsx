@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { FileText, Presentation } from 'lucide-react';
+import { FileText, Presentation, AlertCircle } from 'lucide-react';
 
 interface PPTPreviewProps {
   slideNumber: number;
@@ -16,6 +16,25 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
   slideImageUrl,
   className = '' 
 }) => {
+  const [imageError, setImageError] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    console.log('PPTPreview props:', { slideNumber, fileName, slideImageUrl: slideImageUrl ? 'provided' : 'missing' });
+  }, [slideNumber, fileName, slideImageUrl]);
+
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully for slide', slideNumber);
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.error('Failed to load image for slide', slideNumber);
+    setImageError(true);
+    setImageLoaded(false);
+  };
+
   return (
     <Card className={`bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-2xl rounded-2xl overflow-hidden ${className}`}>
       <div className="aspect-[4/3] relative flex items-center justify-center p-6 sm:p-8">
@@ -32,16 +51,36 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
           
           {/* Slide content */}
           <div className="p-2">
-            {slideImageUrl ? (
+            {slideImageUrl && !imageError ? (
               <div className="relative">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <div className="text-sm text-gray-600">Loading image...</div>
+                    </div>
+                  </div>
+                )}
                 <img 
                   src={slideImageUrl} 
                   alt={`Slide ${slideNumber}`}
-                  className="w-full h-auto rounded-lg"
+                  className={`w-full h-auto rounded-lg transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   style={{ maxHeight: '300px', objectFit: 'contain' }}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
                 />
                 <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                   {slideNumber}
+                </div>
+              </div>
+            ) : imageError ? (
+              <div className="p-6 space-y-4 min-h-[200px] flex flex-col justify-center items-center text-center">
+                <AlertCircle className="w-12 h-12 text-red-500 mb-2" />
+                <div className="text-sm text-red-600 font-medium">
+                  Failed to load slide image
+                </div>
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg">
+                  <span className="text-xl font-bold text-white">{slideNumber}</span>
                 </div>
               </div>
             ) : (
@@ -56,9 +95,9 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
                   </div>
                 </div>
                 
-                {/* Loading state */}
+                {/* No image available state */}
                 <div className="text-center text-gray-500 text-sm">
-                  Loading slide content...
+                  No slide preview available
                 </div>
               </div>
             )}
