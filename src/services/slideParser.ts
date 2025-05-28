@@ -1,4 +1,3 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source to CDN for better reliability
@@ -12,89 +11,134 @@ export interface SlideData {
 
 export class SlideParser {
   static async parsePDF(file: File): Promise<SlideData[]> {
+    console.log('=== STARTING PDF PARSING DEBUG ===');
+    console.log('File name:', file.name);
+    console.log('File size:', file.size, 'bytes');
+    console.log('File type:', file.type);
+    
     try {
-      console.log('Starting PDF parsing for:', file.name);
-      
+      console.log('Step 1: Converting file to array buffer...');
       const arrayBuffer = await file.arrayBuffer();
-      console.log('File loaded, size:', arrayBuffer.byteLength, 'bytes');
+      console.log('Array buffer created, size:', arrayBuffer.byteLength, 'bytes');
       
+      console.log('Step 2: Loading PDF document...');
       const pdf = await pdfjsLib.getDocument({
         data: arrayBuffer,
-        verbosity: 0
+        verbosity: 1 // Increase verbosity for debugging
       }).promise;
       
-      console.log('PDF document loaded successfully, pages:', pdf.numPages);
+      console.log('PDF document loaded successfully!');
+      console.log('Number of pages:', pdf.numPages);
+      console.log('PDF info:', await pdf.getMetadata());
+      
       const slides: SlideData[] = [];
 
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        console.log(`\n--- Processing page ${pageNum} ---`);
+        
         try {
-          console.log(`Processing page ${pageNum}...`);
-          
+          console.log(`Loading page ${pageNum}...`);
           const page = await pdf.getPage(pageNum);
+          console.log(`Page ${pageNum} loaded successfully`);
           
-          // Use a higher scale for better quality
-          const viewport = page.getViewport({ scale: 2.0 });
+          // Get page dimensions
+          const viewport = page.getViewport({ scale: 1.0 });
+          console.log(`Page ${pageNum} dimensions:`, viewport.width, 'x', viewport.height);
           
+          // Use higher scale for better quality
+          const renderViewport = page.getViewport({ scale: 2.0 });
+          console.log(`Render viewport for page ${pageNum}:`, renderViewport.width, 'x', renderViewport.height);
+          
+          console.log(`Creating canvas for page ${pageNum}...`);
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           
           if (!context) {
-            throw new Error('Could not get canvas context');
+            throw new Error(`Could not get canvas context for page ${pageNum}`);
           }
           
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+          canvas.height = renderViewport.height;
+          canvas.width = renderViewport.width;
+          console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
           
           // Set white background
+          console.log(`Setting white background for page ${pageNum}...`);
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
           const renderContext = {
             canvasContext: context,
-            viewport: viewport,
+            viewport: renderViewport,
             intent: 'display'
           };
           
-          // Wait for the page to render completely
-          await page.render(renderContext).promise;
-          console.log(`Page ${pageNum} rendered successfully`);
+          console.log(`Starting render for page ${pageNum}...`);
+          const renderTask = page.render(renderContext);
           
-          // Convert to base64 data URL with high quality
+          // Wait for the page to render completely
+          await renderTask.promise;
+          console.log(`Page ${pageNum} rendered successfully!`);
+          
+          // Convert to base64 data URL
+          console.log(`Converting page ${pageNum} to image...`);
           const imageUrl = canvas.toDataURL('image/jpeg', 0.95);
+          console.log(`Image created for page ${pageNum}, data URL length:`, imageUrl.length);
+          console.log(`Image URL preview for page ${pageNum}:`, imageUrl.substring(0, 100) + '...');
           
           // Extract text content
+          console.log(`Extracting text from page ${pageNum}...`);
           let extractedText = '';
           try {
             const textContent = await page.getTextContent();
+            console.log(`Text content items for page ${pageNum}:`, textContent.items.length);
+            
             extractedText = textContent.items
-              .map((item: any) => item.str || '')
+              .map((item: any) => {
+                console.log('Text item:', item.str);
+                return item.str || '';
+              })
               .filter(str => str.trim().length > 0)
               .join(' ');
-            console.log(`Extracted text from page ${pageNum}:`, extractedText.substring(0, 100) + '...');
+            
+            console.log(`Extracted text from page ${pageNum} (${extractedText.length} chars):`, extractedText.substring(0, 200) + '...');
           } catch (textError) {
             console.warn(`Text extraction failed for page ${pageNum}:`, textError);
           }
           
-          slides.push({
+          const slideData = {
             slideNumber: pageNum,
             imageUrl: imageUrl,
             text: extractedText
-          });
+          };
           
-          console.log(`Slide ${pageNum} processed successfully with image data length:`, imageUrl.length);
+          slides.push(slideData);
+          console.log(`Slide ${pageNum} processed successfully and added to array`);
+          console.log(`Current slides array length:`, slides.length);
           
         } catch (pageError) {
-          console.error(`Error processing page ${pageNum}:`, pageError);
-          // Skip this page instead of adding placeholder
+          console.error(`ERROR processing page ${pageNum}:`, pageError);
+          console.error(`Page error stack:`, pageError.stack);
+          // Continue with next page instead of failing completely
           continue;
         }
       }
       
-      console.log('PDF parsing completed. Total slides:', slides.length);
+      console.log('\n=== PDF PARSING COMPLETED ===');
+      console.log('Total slides processed:', slides.length);
+      console.log('Slides summary:', slides.map(s => ({ slideNumber: s.slideNumber, hasImage: s.imageUrl.length > 100, textLength: s.text?.length || 0 })));
+      
+      if (slides.length === 0) {
+        console.error('NO SLIDES WERE SUCCESSFULLY PROCESSED!');
+        throw new Error('No slides could be processed from the PDF');
+      }
+      
       return slides;
       
     } catch (error) {
-      console.error('PDF parsing failed completely:', error);
+      console.error('=== PDF PARSING FAILED COMPLETELY ===');
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       throw new Error(`Failed to parse PDF: ${error.message}`);
     }
   }
