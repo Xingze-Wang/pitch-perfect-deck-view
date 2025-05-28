@@ -1,6 +1,5 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
-import PizZip from 'pizzip';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -54,6 +53,9 @@ export class SlideParser {
 
   static async parsePowerPoint(file: File): Promise<SlideData[]> {
     try {
+      // Dynamic import to handle potential module loading issues
+      const PizZip = (await import('pizzip')).default;
+      
       const arrayBuffer = await file.arrayBuffer();
       const zip = new PizZip(arrayBuffer);
       const slides: SlideData[] = [];
@@ -80,41 +82,52 @@ export class SlideParser {
             .map(match => match.replace(/<\/?[^>]+(>|$)/g, ''))
             .join(' ');
 
-          // For PowerPoint, we'll create a placeholder image since extracting actual slide images
-          // requires more complex processing of the slide layouts and media files
+          // Create a visual representation of the slide
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d')!;
           canvas.width = 800;
           canvas.height = 600;
           
-          // Create a simple slide representation
+          // Create a slide representation
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
-          context.fillStyle = '#333333';
-          context.font = '24px Arial';
+          // Add border
+          context.strokeStyle = '#e5e7eb';
+          context.lineWidth = 2;
+          context.strokeRect(0, 0, canvas.width, canvas.height);
+          
+          context.fillStyle = '#1f2937';
+          context.font = 'bold 32px Arial';
           context.textAlign = 'center';
-          context.fillText(`Slide ${i + 1}`, canvas.width / 2, 50);
+          context.fillText(`Slide ${i + 1}`, canvas.width / 2, 80);
           
-          context.font = '16px Arial';
-          context.textAlign = 'left';
-          const words = text.substring(0, 200).split(' ');
-          let line = '';
-          let y = 100;
-          
-          for (const word of words) {
-            const testLine = line + word + ' ';
-            const metrics = context.measureText(testLine);
-            if (metrics.width > canvas.width - 40 && line !== '') {
-              context.fillText(line, 20, y);
-              line = word + ' ';
-              y += 25;
-              if (y > canvas.height - 50) break;
-            } else {
-              line = testLine;
+          // Add extracted text content
+          if (text && text.trim()) {
+            context.font = '18px Arial';
+            context.textAlign = 'left';
+            const words = text.substring(0, 300).split(' ');
+            let line = '';
+            let y = 140;
+            const lineHeight = 28;
+            const maxWidth = canvas.width - 80;
+            
+            for (const word of words) {
+              const testLine = line + word + ' ';
+              const metrics = context.measureText(testLine);
+              if (metrics.width > maxWidth && line !== '') {
+                context.fillText(line.trim(), 40, y);
+                line = word + ' ';
+                y += lineHeight;
+                if (y > canvas.height - 60) break;
+              } else {
+                line = testLine;
+              }
+            }
+            if (line.trim() && y <= canvas.height - 60) {
+              context.fillText(line.trim(), 40, y);
             }
           }
-          context.fillText(line, 20, y);
 
           slides.push({
             slideNumber: i + 1,
