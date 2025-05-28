@@ -29,7 +29,7 @@ const Index = () => {
                 <span className="text-blue-600">Pitch</span>
               </h1>
               <p className="text-xl text-gray-500 font-light max-w-lg mx-auto leading-relaxed">
-                Get AI-powered insights to make your startup presentation irresistible
+                Get AI-powered insights to analyze your pitch deck and improve your presentation
               </p>
             </div>
             

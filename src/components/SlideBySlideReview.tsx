@@ -49,18 +49,28 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
         {/* Left Side - Slide Preview */}
         <Card className="p-8 bg-gradient-to-br from-gray-50 to-gray-100 border-0 shadow-xl flex items-center justify-center">
           <div className="text-center space-y-4">
-            <div className="w-32 h-24 mx-auto bg-white rounded-lg shadow-md flex items-center justify-center border-2 border-gray-200">
-              <span className="text-2xl font-light text-gray-600">
-                第 {currentAnalysis.slideNumber} 页
-              </span>
+            <div className="w-80 h-60 mx-auto bg-white rounded-lg shadow-md flex items-center justify-center border-2 border-gray-200 relative overflow-hidden">
+              <div className="text-center p-4">
+                <div className="text-4xl font-bold text-gray-800 mb-2">
+                  {currentAnalysis.slideNumber}
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  第 {currentAnalysis.slideNumber} 页
+                </div>
+                <div className="space-y-2">
+                  <div className="h-2 bg-gray-200 rounded w-full"></div>
+                  <div className="h-2 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                  <div className="h-2 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              </div>
             </div>
             <p className="text-sm text-gray-500">
-              在此处您可以看到实际的幻灯片内容
+              幻灯片预览（实际应用中会显示真实内容）
             </p>
           </div>
         </Card>
 
-        {/* Right Side - VC Feedback */}
+        {/* Right Side - Analysis Feedback */}
         <Card className="p-8 bg-white border-0 shadow-xl">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
