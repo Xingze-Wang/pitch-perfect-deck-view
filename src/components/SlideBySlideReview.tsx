@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User, Users, GraduationCap } from 'lucide-react';
+import { InvestorType } from '@/services/geminiService';
 
 interface SlideAnalysis {
   slideNumber: number;
@@ -14,9 +14,10 @@ interface SlideAnalysis {
 interface SlideBySlideReviewProps {
   slideAnalysis: SlideAnalysis[];
   fileName: string;
+  investorType: InvestorType;
 }
 
-const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, fileName }) => {
+const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, fileName, investorType }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
@@ -27,6 +28,25 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
   };
 
+  const getInvestorIcon = (type: InvestorType) => {
+    switch (type) {
+      case 'vc': return Users;
+      case 'angel': return User;
+      case 'mentor': return GraduationCap;
+      default: return Users;
+    }
+  };
+
+  const getInvestorTitle = (type: InvestorType) => {
+    switch (type) {
+      case 'vc': return '风投合伙人';
+      case 'angel': return '天使投资人';
+      case 'mentor': return '创业班主任';
+      default: return '风投合伙人';
+    }
+  };
+
+  const InvestorIcon = getInvestorIcon(investorType);
   const currentAnalysis = slideAnalysis[currentSlide];
 
   if (!currentAnalysis) {
@@ -41,7 +61,13 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-light text-gray-900 mb-2">逐页点评</h2>
+        <div className="flex items-center justify-center space-x-3 mb-2">
+          <h2 className="text-3xl font-light text-gray-900">逐页点评</h2>
+          <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
+            <InvestorIcon className="w-4 h-4 text-gray-600" />
+            <span className="text-sm text-gray-600">{getInvestorTitle(investorType)}</span>
+          </div>
+        </div>
         <p className="text-gray-500">{fileName}</p>
       </div>
 
@@ -98,7 +124,9 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
               <div className="flex items-start space-x-3">
                 <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-red-900 mb-3">⚠️ 致命隐患/逻辑漏洞</h4>
+                  <h4 className="font-medium text-red-900 mb-3">
+                    {investorType === 'mentor' ? '⚠️ 需要注意的问题' : '⚠️ 致命隐患/逻辑漏洞'}
+                  </h4>
                   <div className="space-y-2">
                     {currentAnalysis.risks && currentAnalysis.risks.length > 0 ? (
                       currentAnalysis.risks.map((risk, index) => (
@@ -120,7 +148,9 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
               <div className="flex items-start space-x-3">
                 <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-medium text-blue-900 mb-2">▶️ 改进建议</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">
+                    {investorType === 'mentor' ? '📚 班主任建议' : '▶️ 改进建议'}
+                  </h4>
                   <p className="text-blue-800 leading-relaxed">{currentAnalysis.improvements}</p>
                 </div>
               </div>

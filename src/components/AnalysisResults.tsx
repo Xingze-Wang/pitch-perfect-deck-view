@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { FileText, BarChart3 } from 'lucide-react';
+import { FileText, BarChart3, User, Users, GraduationCap } from 'lucide-react';
 import SlideBySlideReview from './SlideBySlideReview';
+import { InvestorType } from '@/services/geminiService';
 
 interface SlideAnalysis {
   slideNumber: number;
@@ -16,6 +16,7 @@ interface SlideAnalysis {
 interface AnalysisData {
   overallScore: number;
   fileName: string;
+  investorType: InvestorType;
   metrics: {
     clarity: number;
     market: number;
@@ -59,6 +60,26 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
     financial: '财务模型'
   };
 
+  const getInvestorIcon = (type: InvestorType) => {
+    switch (type) {
+      case 'vc': return Users;
+      case 'angel': return User;
+      case 'mentor': return GraduationCap;
+      default: return Users;
+    }
+  };
+
+  const getInvestorTitle = (type: InvestorType) => {
+    switch (type) {
+      case 'vc': return '风投合伙人';
+      case 'angel': return '天使投资人';
+      case 'mentor': return '创业班主任';
+      default: return '风投合伙人';
+    }
+  };
+
+  const InvestorIcon = getInvestorIcon(data.investorType);
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Horizontal View Mode Toggle */}
@@ -84,13 +105,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
       </div>
 
       {viewMode === 'slides' ? (
-        <SlideBySlideReview slideAnalysis={data.slideAnalysis} fileName={data.fileName} />
+        <SlideBySlideReview slideAnalysis={data.slideAnalysis} fileName={data.fileName} investorType={data.investorType} />
       ) : (
         <div className="space-y-8">
           {/* Overall Score */}
           <Card className="p-8 bg-white/70 backdrop-blur-sm border-0 shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-light text-gray-900">总体评估</h2>
+              <div className="flex items-center space-x-3">
+                <h2 className="text-3xl font-light text-gray-900">总体评估</h2>
+                <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
+                  <InvestorIcon className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm text-gray-600">{getInvestorTitle(data.investorType)}</span>
+                </div>
+              </div>
               <div className={`px-6 py-3 rounded-2xl border-2 ${getScoreBg(data.overallScore)}`}>
                 <span className={`text-2xl font-semibold ${getScoreColor(data.overallScore)}`}>
                   {data.overallScore}/100

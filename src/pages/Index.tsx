@@ -4,22 +4,42 @@ import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
 import LoadingState from '@/components/LoadingState';
 import AnalysisResults from '@/components/AnalysisResults';
+import InvestorSelector from '@/components/InvestorSelector';
 import { usePitchAnalysis } from '@/hooks/usePitchAnalysis';
 import { Button } from '@/components/ui/button';
+import { InvestorType } from '@/services/geminiService';
 
 const Index = () => {
-  const { isAnalyzing, analysisData, analyzeFile, resetAnalysis } = usePitchAnalysis();
+  const { 
+    isAnalyzing, 
+    analysisData, 
+    selectedInvestorType,
+    analyzeFile, 
+    resetAnalysis, 
+    switchInvestorType,
+    setSelectedInvestorType 
+  } = usePitchAnalysis();
 
   const handleFileSelect = (file: File) => {
     console.log('File selected:', file.name);
-    analyzeFile(file);
+    analyzeFile(file, selectedInvestorType);
+  };
+
+  const handleInvestorTypeChange = (newType: InvestorType) => {
+    if (analysisData) {
+      // If we have analysis data, switch and re-analyze
+      switchInvestorType(newType);
+    } else {
+      // If no analysis yet, just update the selection
+      setSelectedInvestorType(newType);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-6 py-20">
+      <main className="max-w-6xl mx-auto px-6 py-20">
         {!isAnalyzing && !analysisData && (
           <div className="text-center space-y-16 animate-fade-in">
             <div className="space-y-8">
@@ -33,7 +53,12 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="max-w-lg mx-auto">
+            <div className="max-w-lg mx-auto space-y-8">
+              <InvestorSelector 
+                selectedType={selectedInvestorType}
+                onTypeChange={handleInvestorTypeChange}
+                isAnalyzing={isAnalyzing}
+              />
               <FileUpload onFileSelect={handleFileSelect} />
             </div>
           </div>
@@ -52,6 +77,15 @@ const Index = () => {
                 Analyze Another Deck
               </Button>
             </div>
+            
+            <div className="max-w-4xl mx-auto mb-8">
+              <InvestorSelector 
+                selectedType={analysisData.investorType}
+                onTypeChange={handleInvestorTypeChange}
+                isAnalyzing={isAnalyzing}
+              />
+            </div>
+            
             <AnalysisResults data={analysisData} />
           </div>
         )}

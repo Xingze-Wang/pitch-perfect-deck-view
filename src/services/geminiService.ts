@@ -1,4 +1,3 @@
-
 const GEMINI_API_KEY = 'AIzaSyB3PbiunEBO9K1c_MuBCjl8yexCZTb9N1w';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
@@ -25,15 +24,63 @@ export interface GeminiAnalysis {
   slideAnalysis: SlideAnalysis[];
 }
 
-export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAnalysis> => {
-  const prompt = `
-【角色设定】
-你现在是投资总监，正在奇绩创坛路演现场观看pitch。请用你标志性的直率风格，对创业者展示的每一页PPT进行专业而犀利的逐页点评，要求直击要害、揭示本质，同时保持建设性。
+export type InvestorType = 'vc' | 'angel' | 'mentor';
 
-我需要你基于文件名"${fileName}"，模拟分析一个典型的创业公司pitch deck，并给出专业的投资人反馈。请假设这是一个12页的标准pitch deck，包含：问题定义、解决方案、市场分析、商业模式、团队介绍、财务预测等典型内容。
+const investorPrompts = {
+  vc: {
+    title: '风投合伙人',
+    prompt: `
+【角色设定】
+你现在是顶级风投的合伙人，专注于B轮及以上投资，管理着数十亿资金。你以严格的尽调标准和对商业模式的深度理解著称。请用你专业而犀利的投资视角对pitch deck进行评估。
+
+【评估重点】
+- 市场规模和增长潜力
+- 商业模式的可扩展性
+- 团队的执行能力
+- 竞争壁垒和护城河
+- 财务模型和增长指标
+`
+  },
+  angel: {
+    title: '天使投资人',
+    prompt: `
+【角色设定】
+你是一位经验丰富的天使投资人，曾是成功的连续创业者，现在专注于早期项目投资。你更关注创始人的潜力、市场时机和产品创新性。
+
+【评估重点】
+- 创始人的背景和执行力
+- 产品的创新性和用户价值
+- 市场时机和早期牵引力
+- 团队配置和学习能力
+- 早期用户反馈和迭代速度
+`
+  },
+  mentor: {
+    title: '创业班主任',
+    prompt: `
+【角色设定】
+你是创业加速器的资深导师，被称为"创业班主任"。你见过无数创业项目的成功与失败，擅长给出实用的建议和改进方向。你的评价风格温和而建设性，重点是帮助创业者成长。
+
+【评估重点】
+- 如何优化pitch的表达方式
+- 具体的改进建议和行动计划
+- 常见的创业陷阱和避免方法
+- 下一步的具体执行步骤
+- 团队能力提升建议
+`
+  }
+};
+
+export const analyzePitchWithGemini = async (fileName: string, investorType: InvestorType = 'vc'): Promise<GeminiAnalysis> => {
+  const investor = investorPrompts[investorType];
+  
+  const prompt = `
+${investor.prompt}
+
+我需要你基于文件名"${fileName}"，模拟分析一个典型的创业公司pitch deck，并给出专业的${investor.title}反馈。请假设这是一个12页的标准pitch deck，包含：问题定义、解决方案、市场分析、商业模式、团队介绍、财务预测等典型内容。
 
 【输出要求】
-请直接以JSON格式回复，不要包含任何其他文字说明：
+请直接以JSON格式回复，不要包含任何其他文字说明。评分标准：90-100分为优秀，80-89分为良好，70-79分为中等，60-69分为需改进，60分以下为较差。
 
 {
   "overallScore": 75,
@@ -138,11 +185,11 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
   ]
 }
 
-请确保回复内容严格按照上述JSON格式，不要添加任何解释文字。
+请确保回复内容严格按照上述JSON格式，不要添加任何解释文字。请基于${investor.title}的专业视角给出真实的评分和建议。
 `;
 
   try {
-    console.log('Calling Gemini API for analysis...');
+    console.log(`Calling Gemini API for ${investor.title} analysis...`);
     
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -156,7 +203,7 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
           }]
         }],
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.4,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
@@ -214,7 +261,7 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
     // Validate the analysis structure
     if (!analysis.slideAnalysis || !Array.isArray(analysis.slideAnalysis)) {
       console.warn('Invalid slideAnalysis in response, using fallback');
-      analysis.slideAnalysis = generateMockSlideAnalysis();
+      analysis.slideAnalysis = generateMockSlideAnalysis(investorType);
     }
     
     if (!analysis.overallScore) {
@@ -222,25 +269,29 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
     }
     
     if (!analysis.metrics) {
-      analysis.metrics = {
-        clarity: Math.floor(Math.random() * 25) + 75,
-        market: Math.floor(Math.random() * 30) + 65,
-        team: Math.floor(Math.random() * 25) + 70,
-        traction: Math.floor(Math.random() * 40) + 50,
-        financial: Math.floor(Math.random() * 35) + 60,
-      };
+      analysis.metrics = generateDynamicMetrics();
     }
     
     return analysis;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     // Fallback to mock data if API fails
-    return generateMockAnalysis(fileName);
+    return generateMockAnalysis(fileName, investorType);
   }
 };
 
-const generateMockSlideAnalysis = (): SlideAnalysis[] => {
-  return [
+const generateDynamicMetrics = () => {
+  return {
+    clarity: Math.floor(Math.random() * 25) + 75,
+    market: Math.floor(Math.random() * 30) + 65,
+    team: Math.floor(Math.random() * 25) + 70,
+    traction: Math.floor(Math.random() * 40) + 50,
+    financial: Math.floor(Math.random() * 35) + 60,
+  };
+};
+
+const generateMockSlideAnalysis = (investorType: InvestorType): SlideAnalysis[] => {
+  const baseAnalysis = [
     {
       slideNumber: 1,
       highlight: "问题定义精准，直击用户痛点",
@@ -314,18 +365,24 @@ const generateMockSlideAnalysis = (): SlideAnalysis[] => {
       improvements: "基于可比公司调整估值预期，制定更现实的时间规划"
     }
   ];
+
+  // Customize based on investor type
+  if (investorType === 'mentor') {
+    return baseAnalysis.map(slide => ({
+      ...slide,
+      improvements: `【班主任建议】${slide.improvements}，建议制定具体的执行时间表`
+    }));
+  }
+
+  return baseAnalysis;
 };
 
-const generateMockAnalysis = (fileName: string): GeminiAnalysis => {
+const generateMockAnalysis = (fileName: string, investorType: InvestorType): GeminiAnalysis => {
+  const investorContext = investorPrompts[investorType];
+  
   return {
     overallScore: Math.floor(Math.random() * 30) + 70,
-    metrics: {
-      clarity: Math.floor(Math.random() * 25) + 75,
-      market: Math.floor(Math.random() * 30) + 65,
-      team: Math.floor(Math.random() * 25) + 70,
-      traction: Math.floor(Math.random() * 40) + 50,
-      financial: Math.floor(Math.random() * 35) + 60,
-    },
+    metrics: generateDynamicMetrics(),
     insights: [
       "商业模式具备可扩展性，单位经济效益清晰",
       "团队背景与市场需求高度匹配",
@@ -344,6 +401,6 @@ const generateMockAnalysis = (fileName: string): GeminiAnalysis => {
       "市场天花板论证不够充分",
       "团队技术基因需要补强"
     ],
-    slideAnalysis: generateMockSlideAnalysis()
+    slideAnalysis: generateMockSlideAnalysis(investorType)
   };
 };
