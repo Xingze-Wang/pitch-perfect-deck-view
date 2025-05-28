@@ -35,6 +35,11 @@ const Index = () => {
     }
   };
 
+  const handleAnalyzeAnother = () => {
+    resetAnalysis();
+    // Don't redirect, just reset state to show upload again
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <Header />
@@ -74,11 +79,11 @@ const Index = () => {
           </div>
         )}
 
-        {analysisData && (
+        {analysisData && !isAnalyzing && (
           <div className="py-8 space-y-8">
             <div className="flex justify-center">
               <Button 
-                onClick={resetAnalysis}
+                onClick={handleAnalyzeAnother}
                 variant="outline"
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 px-6 py-2 font-medium"
               >
