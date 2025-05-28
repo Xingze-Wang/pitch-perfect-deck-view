@@ -85,8 +85,8 @@ export class SlideParser {
           
         } catch (pageError) {
           console.error(`Error processing page ${pageNum}:`, pageError);
-          // Only add fallback if we absolutely cannot render the page
-          throw pageError;
+          // Skip this page instead of adding placeholder
+          continue;
         }
       }
       
@@ -121,46 +121,19 @@ export class SlideParser {
             .map(match => match.replace(/<\/?[^>]+(>|$)/g, ''))
             .join(' ');
 
-          // Create a simple representation without placeholder text
+          // Create a clean white slide without any placeholder text
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d')!;
           canvas.width = 1024;
           canvas.height = 768;
           
+          // Only white background, no text overlays
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
           context.strokeStyle = '#e5e7eb';
           context.lineWidth = 1;
           context.strokeRect(0, 0, canvas.width, canvas.height);
-          
-          if (text && text.trim()) {
-            context.fillStyle = '#1f2937';
-            context.font = '24px Arial';
-            context.textAlign = 'left';
-            
-            const words = text.split(' ');
-            let line = '';
-            let y = 60;
-            const lineHeight = 36;
-            const maxWidth = canvas.width - 80;
-            
-            for (const word of words) {
-              const testLine = line + word + ' ';
-              const metrics = context.measureText(testLine);
-              if (metrics.width > maxWidth && line !== '') {
-                context.fillText(line.trim(), 40, y);
-                line = word + ' ';
-                y += lineHeight;
-                if (y > canvas.height - 60) break;
-              } else {
-                line = testLine;
-              }
-            }
-            if (line.trim() && y <= canvas.height - 60) {
-              context.fillText(line.trim(), 40, y);
-            }
-          }
 
           slides.push({
             slideNumber: i + 1,
