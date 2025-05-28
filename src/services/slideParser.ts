@@ -1,7 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Use a more reliable worker setup
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+// Use local worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/node_modules/pdfjs-dist/build/pdf.worker.min.js';
 
 export interface SlideData {
   slideNumber: number;
@@ -19,7 +19,10 @@ export class SlideParser {
       
       const pdf = await pdfjsLib.getDocument({
         data: arrayBuffer,
-        verbosity: 0
+        verbosity: 0,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true
       }).promise;
       
       console.log('PDF document loaded successfully, pages:', pdf.numPages);
@@ -30,9 +33,8 @@ export class SlideParser {
           console.log(`Processing page ${pageNum}...`);
           
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 2.0 });
+          const viewport = page.getViewport({ scale: 1.5 });
           
-          // Create canvas with higher resolution
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           
@@ -43,27 +45,20 @@ export class SlideParser {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           
-          // White background
+          // Render with white background
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
           
-          // Render the page with timeout
-          const renderTask = page.render({
+          const renderContext = {
             canvasContext: context,
             viewport: viewport
-          });
+          };
           
-          await Promise.race([
-            renderTask.promise,
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Render timeout')), 10000)
-            )
-          ]);
-          
+          await page.render(renderContext).promise;
           console.log(`Page ${pageNum} rendered successfully`);
           
-          // Convert to image
-          const imageUrl = canvas.toDataURL('image/jpeg', 0.8);
+          // Convert to high-quality image
+          const imageUrl = canvas.toDataURL('image/png', 1.0);
           
           // Extract text
           let extractedText = '';
@@ -87,7 +82,6 @@ export class SlideParser {
           
         } catch (pageError) {
           console.error(`Error processing page ${pageNum}:`, pageError);
-          // Create fallback slide
           slides.push({
             slideNumber: pageNum,
             imageUrl: this.createFallbackSlide(pageNum),
@@ -100,9 +94,8 @@ export class SlideParser {
       return slides;
       
     } catch (error) {
-      console.error('PDF parsing failed completely:', error);
-      // Return fallback slides
-      return this.createFallbackSlides(5); // Default to 5 slides
+      console.error('PDF parsing failed:', error);
+      return this.createFallbackSlides(5);
     }
   }
 
@@ -119,7 +112,7 @@ export class SlideParser {
     // Border
     context.strokeStyle = '#e5e7eb';
     context.lineWidth = 2;
-    context.strokeRect(0, 0, canvas.width, canvas.height);
+    context.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
     
     // Content
     context.fillStyle = '#374151';
@@ -128,9 +121,10 @@ export class SlideParser {
     context.fillText(`Slide ${slideNumber}`, canvas.width / 2, canvas.height / 2 - 50);
     
     context.font = '24px Arial';
-    context.fillText('Content could not be loaded', canvas.width / 2, canvas.height / 2 + 20);
+    context.fillStyle = '#6b7280';
+    context.fillText('Content unavailable', canvas.width / 2, canvas.height / 2 + 20);
     
-    return canvas.toDataURL('image/jpeg', 0.8);
+    return canvas.toDataURL('image/png', 1.0);
   }
 
   static createFallbackSlides(count: number): SlideData[] {

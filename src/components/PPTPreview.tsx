@@ -18,41 +18,27 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
 }) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
-  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('PPTPreview - Slide:', slideNumber, 'Image URL exists:', !!slideImageUrl, 'URL length:', slideImageUrl?.length);
+    console.log('PPTPreview - Slide:', slideNumber, 'Image URL exists:', !!slideImageUrl);
     setImageError(false);
     setImageLoaded(false);
-    setLoadingTimeout(false);
-    
-    // Set a timeout to show error if image doesn't load
-    const timer = setTimeout(() => {
-      if (!imageLoaded && slideImageUrl) {
-        console.warn('Image loading timeout for slide', slideNumber);
-        setLoadingTimeout(true);
-      }
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, [slideNumber, slideImageUrl, imageLoaded]);
+  }, [slideNumber, slideImageUrl]);
 
   const handleImageLoad = () => {
     console.log('Image loaded successfully for slide', slideNumber);
     setImageLoaded(true);
     setImageError(false);
-    setLoadingTimeout(false);
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error('Failed to load image for slide', slideNumber, 'Error:', e);
+    console.error('Failed to load image for slide', slideNumber);
     setImageError(true);
     setImageLoaded(false);
-    setLoadingTimeout(false);
   };
 
-  const shouldShowLoading = slideImageUrl && !imageLoaded && !imageError && !loadingTimeout;
-  const shouldShowError = !slideImageUrl || imageError || loadingTimeout;
+  const showError = !slideImageUrl || imageError;
+  const showLoading = slideImageUrl && !imageLoaded && !imageError;
 
   return (
     <Card className={`bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-2xl rounded-2xl overflow-hidden ${className}`}>
@@ -69,16 +55,16 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
           
           {/* Slide content */}
           <div className="p-2">
-            {shouldShowLoading && (
+            {showLoading && (
               <div className="flex items-center justify-center bg-gray-100 rounded-lg min-h-[200px]">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <div className="text-sm text-gray-600">Loading slide content...</div>
+                  <div className="text-sm text-gray-600">Loading slide...</div>
                 </div>
               </div>
             )}
             
-            {slideImageUrl && !shouldShowError && (
+            {slideImageUrl && !showError && (
               <div className="relative">
                 <img 
                   src={slideImageUrl} 
@@ -99,11 +85,11 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
               </div>
             )}
             
-            {shouldShowError && (
+            {showError && (
               <div className="p-6 space-y-4 min-h-[200px] flex flex-col justify-center items-center text-center">
                 <AlertCircle className="w-12 h-12 text-orange-500 mb-2" />
                 <div className="text-sm text-orange-600 font-medium">
-                  {loadingTimeout ? 'Loading timed out' : 'Slide content unavailable'}
+                  Slide content unavailable
                 </div>
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-lg">
                   <span className="text-xl font-bold text-white">{slideNumber}</span>
