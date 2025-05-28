@@ -1,4 +1,3 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source to CDN for better reliability
@@ -12,85 +11,149 @@ export interface SlideData {
 
 export class SlideParser {
   static async parsePDF(file: File): Promise<SlideData[]> {
-    console.log('🔍 === ENHANCED PDF PARSING DEBUG ===');
-    console.log('📄 File details:', { name: file.name, size: file.size, type: file.type });
+    console.log('🚀 ===== PDF PARSING START =====');
+    console.log('📁 File received:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: new Date(file.lastModified).toISOString()
+    });
     
     try {
-      console.log('⏳ Step 1: Converting file to array buffer...');
+      console.log('🔄 STEP 1: Converting file to ArrayBuffer...');
       const arrayBuffer = await file.arrayBuffer();
-      console.log('✅ Array buffer created:', arrayBuffer.byteLength, 'bytes');
+      console.log('✅ ArrayBuffer created successfully:', {
+        byteLength: arrayBuffer.byteLength,
+        isValid: arrayBuffer.byteLength > 0
+      });
       
-      console.log('⏳ Step 2: Loading PDF document...');
-      const pdf = await pdfjsLib.getDocument({
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('File is empty or corrupted');
+      }
+      
+      console.log('🔄 STEP 2: Initializing PDF.js worker...');
+      console.log('🔧 Worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+      
+      console.log('🔄 STEP 3: Loading PDF document...');
+      const loadingTask = pdfjsLib.getDocument({
         data: arrayBuffer,
-        verbosity: 2 // Maximum verbosity for debugging
-      }).promise;
+        verbosity: 2,
+        enableXfa: false
+      });
       
-      console.log('✅ PDF loaded! Pages:', pdf.numPages);
+      console.log('📋 Loading task created:', {
+        docId: loadingTask.docId,
+        destroyed: loadingTask.destroyed
+      });
       
-      // Get PDF metadata for debugging
+      const pdf = await loadingTask.promise;
+      console.log('✅ PDF loaded successfully!', {
+        numPages: pdf.numPages,
+        fingerprint: pdf.fingerprint
+      });
+      
+      // Get and log PDF metadata
       try {
+        console.log('🔄 Getting PDF metadata...');
         const metadata = await pdf.getMetadata();
-        console.log('📊 PDF Metadata:', metadata);
+        console.log('📊 PDF Metadata:', {
+          title: metadata.info?.Title || 'N/A',
+          creator: metadata.info?.Creator || 'N/A',
+          producer: metadata.info?.Producer || 'N/A',
+          creationDate: metadata.info?.CreationDate || 'N/A'
+        });
       } catch (metaError) {
-        console.warn('⚠️ Could not get metadata:', metaError);
+        console.warn('⚠️ Metadata extraction failed:', metaError);
       }
       
       const slides: SlideData[] = [];
+      const maxPages = Math.min(pdf.numPages, 5); // Process max 5 pages for debugging
+      
+      console.log(`🔄 Will process ${maxPages} pages out of ${pdf.numPages} total pages`);
 
-      for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 3); pageNum++) { // Limit to first 3 pages for debugging
-        console.log(`\n🔄 === PROCESSING PAGE ${pageNum} ===`);
+      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+        console.log(`\n📄 ===== PROCESSING PAGE ${pageNum}/${maxPages} =====`);
         
         try {
-          console.log(`⏳ Loading page ${pageNum}...`);
+          console.log(`🔄 Loading page ${pageNum}...`);
           const page = await pdf.getPage(pageNum);
-          console.log(`✅ Page ${pageNum} loaded successfully`);
+          console.log(`✅ Page ${pageNum} loaded`, {
+            pageIndex: page.pageIndex,
+            pageNumber: page.pageNumber
+          });
           
-          // Get page info
+          // Get viewport information
+          console.log(`🔄 Getting viewport for page ${pageNum}...`);
           const viewport = page.getViewport({ scale: 1.0 });
-          console.log(`📐 Page ${pageNum} viewport:`, { width: viewport.width, height: viewport.height });
+          console.log(`📐 Viewport for page ${pageNum}:`, {
+            width: viewport.width,
+            height: viewport.height,
+            rotation: viewport.rotation,
+            transform: viewport.transform
+          });
           
-          // Check if page has content
-          console.log(`🔍 Checking page ${pageNum} content...`);
-          
-          // Try to get text content first
+          // Extract text content
+          console.log(`🔄 Extracting text from page ${pageNum}...`);
           let textContent = '';
           try {
             const textData = await page.getTextContent();
-            console.log(`📝 Text items found on page ${pageNum}:`, textData.items.length);
+            console.log(`📝 Text extraction for page ${pageNum}:`, {
+              itemsCount: textData.items.length,
+              stylesCount: Object.keys(textData.styles || {}).length
+            });
+            
             textContent = textData.items
-              .map((item: any) => item.str || '')
+              .map((item: any) => {
+                console.log(`📝 Text item:`, {
+                  str: item.str?.substring(0, 50) + '...',
+                  x: item.transform?.[4],
+                  y: item.transform?.[5]
+                });
+                return item.str || '';
+              })
               .filter(str => str.trim().length > 0)
               .join(' ');
-            console.log(`📝 Extracted text (${textContent.length} chars):`, textContent.substring(0, 100) + '...');
+            
+            console.log(`📝 Final text for page ${pageNum}:`, {
+              length: textContent.length,
+              preview: textContent.substring(0, 100) + '...'
+            });
           } catch (textError) {
-            console.warn(`⚠️ Text extraction failed for page ${pageNum}:`, textError);
+            console.error(`❌ Text extraction failed for page ${pageNum}:`, textError);
           }
           
-          // Create canvas for rendering
+          // Create canvas
           console.log(`🎨 Creating canvas for page ${pageNum}...`);
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           
           if (!context) {
-            throw new Error(`❌ Could not get canvas context for page ${pageNum}`);
+            throw new Error(`Canvas context is null for page ${pageNum}`);
           }
           
-          // Use moderate scale for better performance
+          console.log(`✅ Canvas context created for page ${pageNum}`);
+          
+          // Set canvas dimensions
           const scale = 1.5;
           const renderViewport = page.getViewport({ scale });
           
           canvas.width = renderViewport.width;
           canvas.height = renderViewport.height;
-          console.log(`🎨 Canvas dimensions: ${canvas.width}x${canvas.height}`);
           
-          // Clear canvas with white background
+          console.log(`🎨 Canvas configured for page ${pageNum}:`, {
+            width: canvas.width,
+            height: canvas.height,
+            scale: scale
+          });
+          
+          // Clear canvas
+          console.log(`🎨 Clearing canvas for page ${pageNum}...`);
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
-          console.log(`🎨 Canvas prepared with white background`);
+          console.log(`✅ Canvas cleared for page ${pageNum}`);
           
-          // Render the page
-          console.log(`⏳ Starting render for page ${pageNum}...`);
+          // Render page
+          console.log(`🖼️ Starting render for page ${pageNum}...`);
           const renderContext = {
             canvasContext: context,
             viewport: renderViewport,
@@ -98,30 +161,45 @@ export class SlideParser {
           };
           
           const renderTask = page.render(renderContext);
+          console.log(`🖼️ Render task created for page ${pageNum}`, {
+            cancelled: renderTask.cancelled
+          });
           
-          // Add timeout to render task
+          // Add timeout and detailed error handling
           const renderPromise = Promise.race([
-            renderTask.promise,
+            renderTask.promise.then(() => {
+              console.log(`✅ Render completed successfully for page ${pageNum}`);
+              return true;
+            }).catch((renderError) => {
+              console.error(`❌ Render promise failed for page ${pageNum}:`, renderError);
+              throw renderError;
+            }),
             new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Render timeout')), 30000)
+              setTimeout(() => {
+                console.error(`⏰ Render timeout for page ${pageNum}`);
+                reject(new Error(`Render timeout for page ${pageNum}`));
+              }, 30000)
             )
           ]);
           
           await renderPromise;
-          console.log(`✅ Page ${pageNum} rendered successfully!`);
+          console.log(`✅ Page ${pageNum} rendered to canvas successfully`);
           
           // Convert to image
-          console.log(`🖼️ Converting page ${pageNum} to image...`);
+          console.log(`🖼️ Converting page ${pageNum} to data URL...`);
           const imageUrl = canvas.toDataURL('image/png', 0.9);
+          
+          console.log(`🖼️ Image conversion for page ${pageNum}:`, {
+            dataUrlLength: imageUrl.length,
+            startsWithPng: imageUrl.startsWith('data:image/png'),
+            preview: imageUrl.substring(0, 50) + '...'
+          });
           
           // Validate image
           if (imageUrl.length < 1000) {
-            console.error(`❌ Image too small for page ${pageNum}:`, imageUrl.length, 'chars');
-            throw new Error('Generated image is too small');
+            console.error(`❌ Generated image too small for page ${pageNum}:`, imageUrl.length);
+            throw new Error(`Generated image is too small for page ${pageNum}`);
           }
-          
-          console.log(`✅ Image created for page ${pageNum}:`, imageUrl.length, 'chars');
-          console.log(`🖼️ Image preview:`, imageUrl.substring(0, 50) + '...');
           
           const slideData: SlideData = {
             slideNumber: pageNum,
@@ -130,39 +208,43 @@ export class SlideParser {
           };
           
           slides.push(slideData);
-          console.log(`✅ Slide ${pageNum} added to results. Total slides:`, slides.length);
+          console.log(`✅ Slide ${pageNum} added to results. Current slides count:`, slides.length);
           
         } catch (pageError) {
-          console.error(`❌ CRITICAL ERROR processing page ${pageNum}:`, pageError);
-          console.error(`🔍 Error details:`, {
-            name: pageError.name,
-            message: pageError.message,
-            stack: pageError.stack
+          console.error(`💥 CRITICAL ERROR processing page ${pageNum}:`, {
+            errorName: pageError.name,
+            errorMessage: pageError.message,
+            errorStack: pageError.stack,
+            errorConstructor: pageError.constructor.name
           });
-          // Don't throw here, continue with other pages
+          
+          // Continue with other pages instead of stopping
+          console.log(`⏭️ Continuing to next page after error on page ${pageNum}`);
         }
       }
       
-      console.log('\n🎉 === PDF PARSING COMPLETED ===');
+      console.log('\n🎉 ===== PDF PARSING COMPLETED =====');
       console.log('📊 Final results:', {
         totalSlides: slides.length,
         slideNumbers: slides.map(s => s.slideNumber),
-        imageSizes: slides.map(s => s.imageUrl.length)
+        imageSizes: slides.map(s => s.imageUrl.length),
+        hasAnySlides: slides.length > 0
       });
       
       if (slides.length === 0) {
         console.error('💥 FATAL: No slides were successfully processed!');
-        throw new Error('No slides could be processed from the PDF. The file might be corrupted or empty.');
+        throw new Error('No slides could be processed from the PDF. Check console for detailed error logs.');
       }
       
       return slides;
       
     } catch (error) {
-      console.error('💥 === COMPLETE PDF PARSING FAILURE ===');
+      console.error('💥 ===== COMPLETE PDF PARSING FAILURE =====');
       console.error('🔍 Error details:', {
-        type: error.constructor.name,
-        message: error.message,
-        stack: error.stack
+        errorType: error.constructor.name,
+        errorMessage: error.message,
+        errorStack: error.stack,
+        timestamp: new Date().toISOString()
       });
       throw new Error(`Failed to parse PDF: ${error.message}`);
     }
