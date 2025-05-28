@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User, Users, GraduationCap } from 'lucide-react';
 import { InvestorType } from '@/services/geminiService';
+import { SlideData } from '@/services/slideParser';
 import PPTPreview from './PPTPreview';
 
 interface SlideAnalysis {
@@ -17,9 +18,15 @@ interface SlideBySlideReviewProps {
   slideAnalysis: SlideAnalysis[];
   fileName: string;
   investorType: InvestorType;
+  actualSlides?: SlideData[];
 }
 
-const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, fileName, investorType }) => {
+const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ 
+  slideAnalysis, 
+  fileName, 
+  investorType,
+  actualSlides 
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
@@ -60,6 +67,10 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
     );
   }
 
+  // Get the actual slide image URL if available
+  const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
+  const slideImageUrl = actualSlide?.imageUrl;
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="text-center">
@@ -74,10 +85,11 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left Side - Slide Preview */}
+        {/* Left Side - Actual Slide Preview */}
         <PPTPreview 
           slideNumber={currentAnalysis.slideNumber}
           fileName={fileName}
+          slideImageUrl={slideImageUrl}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 

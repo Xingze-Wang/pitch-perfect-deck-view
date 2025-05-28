@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, User, Users, GraduationCap } from 'lucide-react';
 import SlideBySlideReview from './SlideBySlideReview';
 import { InvestorType } from '@/services/geminiService';
+import { SlideData } from '@/services/slideParser';
 
 interface SlideAnalysis {
   slideNumber: number;
@@ -17,6 +19,7 @@ interface AnalysisData {
   overallScore: number;
   fileName: string;
   investorType: InvestorType;
+  actualSlides?: SlideData[];
   metrics: {
     clarity: number;
     market: number;
@@ -105,7 +108,12 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
       </div>
 
       {viewMode === 'slides' ? (
-        <SlideBySlideReview slideAnalysis={data.slideAnalysis} fileName={data.fileName} investorType={data.investorType} />
+        <SlideBySlideReview 
+          slideAnalysis={data.slideAnalysis} 
+          fileName={data.fileName} 
+          investorType={data.investorType}
+          actualSlides={data.actualSlides}
+        />
       ) : (
         <div className="space-y-8">
           {/* Overall Score */}
