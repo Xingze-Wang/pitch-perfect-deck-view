@@ -29,10 +29,19 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
 
   const currentAnalysis = slideAnalysis[currentSlide];
 
+  if (!currentAnalysis) {
+    console.log('No current analysis found, slideAnalysis:', slideAnalysis, 'currentSlide:', currentSlide);
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-500">无法加载幻灯片分析数据</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-light text-gray-900 mb-2">金沙江创投 逐页点评</h2>
+        <h2 className="text-3xl font-light text-gray-900 mb-2">逐页点评</h2>
         <p className="text-gray-500">{fileName}</p>
       </div>
 
@@ -42,7 +51,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
           <div className="text-center space-y-4">
             <div className="w-32 h-24 mx-auto bg-white rounded-lg shadow-md flex items-center justify-center border-2 border-gray-200">
               <span className="text-2xl font-light text-gray-600">
-                第 {currentAnalysis?.slideNumber} 页
+                第 {currentAnalysis.slideNumber} 页
               </span>
             </div>
             <p className="text-sm text-gray-500">
@@ -56,7 +65,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-medium text-gray-900">
-                第 {currentAnalysis?.slideNumber} 页 分析
+                第 {currentAnalysis.slideNumber} 页 分析
               </h3>
               <div className="text-sm text-gray-500">
                 {currentSlide + 1} / {slideAnalysis.length}
@@ -69,7 +78,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
                 <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="font-medium text-emerald-900 mb-2">✓ 本页亮点</h4>
-                  <p className="text-emerald-800 leading-relaxed">{currentAnalysis?.highlight}</p>
+                  <p className="text-emerald-800 leading-relaxed">{currentAnalysis.highlight}</p>
                 </div>
               </div>
             </div>
@@ -81,12 +90,16 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
                 <div className="flex-1">
                   <h4 className="font-medium text-red-900 mb-3">⚠️ 致命隐患/逻辑漏洞</h4>
                   <div className="space-y-2">
-                    {currentAnalysis?.risks.map((risk, index) => (
-                      <div key={index} className="flex items-start space-x-2">
-                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-red-800 leading-relaxed">{risk}</p>
-                      </div>
-                    ))}
+                    {currentAnalysis.risks && currentAnalysis.risks.length > 0 ? (
+                      currentAnalysis.risks.map((risk, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <p className="text-red-800 leading-relaxed">{risk}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-red-800 leading-relaxed">暂无风险分析</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -98,7 +111,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({ slideAnalysis, 
                 <ArrowRight className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="font-medium text-blue-900 mb-2">▶️ 改进建议</h4>
-                  <p className="text-blue-800 leading-relaxed">{currentAnalysis?.improvements}</p>
+                  <p className="text-blue-800 leading-relaxed">{currentAnalysis.improvements}</p>
                 </div>
               </div>
             </div>

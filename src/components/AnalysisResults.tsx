@@ -61,13 +61,13 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* View Mode Toggle */}
+      {/* Horizontal View Mode Toggle */}
       <div className="flex justify-center">
-        <div className="bg-white rounded-xl p-1 shadow-lg border">
+        <div className="bg-white rounded-xl p-1 shadow-lg border flex">
           <Button
             onClick={() => setViewMode('slides')}
             variant={viewMode === 'slides' ? 'default' : 'ghost'}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 px-6 py-3"
           >
             <FileText className="w-4 h-4" />
             <span>逐页点评</span>
@@ -75,7 +75,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
           <Button
             onClick={() => setViewMode('overview')}
             variant={viewMode === 'overview' ? 'default' : 'ghost'}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 px-6 py-3"
           >
             <BarChart3 className="w-4 h-4" />
             <span>总体分析</span>
@@ -90,7 +90,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
           {/* Overall Score */}
           <Card className="p-8 bg-white/70 backdrop-blur-sm border-0 shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-light text-gray-900">金沙江创投 总体评估</h2>
+              <h2 className="text-3xl font-light text-gray-900">总体评估</h2>
               <div className={`px-6 py-3 rounded-2xl border-2 ${getScoreBg(data.overallScore)}`}>
                 <span className={`text-2xl font-semibold ${getScoreColor(data.overallScore)}`}>
                   {data.overallScore}/100

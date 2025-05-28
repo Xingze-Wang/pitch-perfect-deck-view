@@ -27,9 +27,8 @@ export interface GeminiAnalysis {
 
 export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAnalysis> => {
   const prompt = `
-金沙江
 【角色设定】
-你现在是金沙江创投董事总经理，正在奇绩创坛路演现场观看pitch。请用你标志性的直率风格，对创业者展示的每一页PPT进行专业而犀利的逐页点评，要求直击要害、揭示本质，同时保持建设性。
+你现在是投资总监，正在奇绩创坛路演现场观看pitch。请用你标志性的直率风格，对创业者展示的每一页PPT进行专业而犀利的逐页点评，要求直击要害、揭示本质，同时保持建设性。
 
 分析这个pitch deck文件: "${fileName}"
 
@@ -82,6 +81,8 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
 `;
 
   try {
+    console.log('Calling Gemini API with prompt:', prompt.substring(0, 200) + '...');
+    
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -102,25 +103,59 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
       })
     });
 
+    console.log('Gemini API response status:', response.status);
+
     if (!response.ok) {
+      console.error('Gemini API error:', response.status, response.statusText);
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Raw Gemini response:', data);
+    
     const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!analysisText) {
+      console.error('No analysis text in response:', data);
       throw new Error('No analysis text received from Gemini');
     }
 
-    // Extract JSON from the response
-    const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+    console.log('Analysis text from Gemini:', analysisText);
+
+    // Try to extract JSON from the response
+    let jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+    
     if (!jsonMatch) {
+      // Try alternative extraction methods
+      const lines = analysisText.split('\n');
+      const jsonStart = lines.findIndex(line => line.trim().startsWith('{'));
+      const jsonEnd = lines.findIndex(line => line.trim().endsWith('}'));
+      
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        const jsonText = lines.slice(jsonStart, jsonEnd + 1).join('\n');
+        jsonMatch = [jsonText];
+      }
+    }
+    
+    if (!jsonMatch) {
+      console.error('No valid JSON found in Gemini response:', analysisText);
       throw new Error('No valid JSON found in Gemini response');
     }
 
-    const analysis = JSON.parse(jsonMatch[0]);
-    console.log('Gemini analysis completed:', analysis);
+    let analysis;
+    try {
+      analysis = JSON.parse(jsonMatch[0]);
+      console.log('Parsed analysis from Gemini:', analysis);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Raw JSON:', jsonMatch[0]);
+      throw new Error('Failed to parse JSON from Gemini response');
+    }
+    
+    // Validate the analysis structure
+    if (!analysis.slideAnalysis || !Array.isArray(analysis.slideAnalysis)) {
+      console.warn('Invalid slideAnalysis in response, using fallback');
+      analysis.slideAnalysis = generateMockSlideAnalysis();
+    }
     
     return analysis;
   } catch (error) {
@@ -128,6 +163,47 @@ export const analyzePitchWithGemini = async (fileName: string): Promise<GeminiAn
     // Fallback to mock data if API fails
     return generateMockAnalysis(fileName);
   }
+};
+
+const generateMockSlideAnalysis = (): SlideAnalysis[] => {
+  return [
+    {
+      slideNumber: 1,
+      highlight: "问题定义精准，直击用户痛点",
+      risks: ["市场规模缺乏权威数据支撑", "用户需求的紧迫性论证不足"],
+      improvements: "补充第三方市场调研报告，增加用户访谈数据"
+    },
+    {
+      slideNumber: 2,
+      highlight: "解决方案技术路径清晰",
+      risks: ["技术壁垒不够高", "可被大厂快速复制"],
+      improvements: "强化核心技术的专利布局，突出算法优势"
+    },
+    {
+      slideNumber: 3,
+      highlight: "商业模式闭环逻辑合理",
+      risks: ["单位经济模型假设过于乐观", "规模化成本控制存疑"],
+      improvements: "提供保守情况下的财务预测，增加成本结构分析"
+    },
+    {
+      slideNumber: 4,
+      highlight: "市场时机把握精准",
+      risks: ["TAM计算方法存在水分", "竞争格局分析过于简化"],
+      improvements: "使用bottom-up方法重新计算市场规模，增加竞品深度分析"
+    },
+    {
+      slideNumber: 5,
+      highlight: "产品功能演示直观有效",
+      risks: ["用户体验优势难以量化", "产品迭代速度可能跟不上需求"],
+      improvements: "增加用户满意度数据，展示产品roadmap"
+    },
+    {
+      slideNumber: 6,
+      highlight: "增长数据趋势良好",
+      risks: ["用户获取成本上升趋势明显", "留存率在关键节点有下滑"],
+      improvements: "详细分析CAC上升原因，制定用户留存改善计划"
+    }
+  ];
 };
 
 const generateMockAnalysis = (fileName: string): GeminiAnalysis => {
@@ -158,43 +234,6 @@ const generateMockAnalysis = (fileName: string): GeminiAnalysis => {
       "市场天花板论证不够充分",
       "团队技术基因需要补强"
     ],
-    slideAnalysis: [
-      {
-        slideNumber: 1,
-        highlight: "问题定义精准，直击用户痛点",
-        risks: ["市场规模缺乏权威数据支撑", "用户需求的紧迫性论证不足"],
-        improvements: "补充第三方市场调研报告，增加用户访谈数据"
-      },
-      {
-        slideNumber: 2,
-        highlight: "解决方案技术路径清晰",
-        risks: ["技术壁垒不够高", "可被大厂快速复制"],
-        improvements: "强化核心技术的专利布局，突出算法优势"
-      },
-      {
-        slideNumber: 3,
-        highlight: "商业模式闭环逻辑合理",
-        risks: ["单位经济模型假设过于乐观", "规模化成本控制存疑"],
-        improvements: "提供保守情况下的财务预测，增加成本结构分析"
-      },
-      {
-        slideNumber: 4,
-        highlight: "市场时机把握精准",
-        risks: ["TAM计算方法存在水分", "竞争格局分析过于简化"],
-        improvements: "使用bottom-up方法重新计算市场规模，增加竞品深度分析"
-      },
-      {
-        slideNumber: 5,
-        highlight: "产品功能演示直观有效",
-        risks: ["用户体验优势难以量化", "产品迭代速度可能跟不上需求"],
-        improvements: "增加用户满意度数据，展示产品roadmap"
-      },
-      {
-        slideNumber: 6,
-        highlight: "增长数据趋势良好",
-        risks: ["用户获取成本上升趋势明显", "留存率在关键节点有下滑"],
-        improvements: "详细分析CAC上升原因，制定用户留存改善计划"
-      }
-    ]
+    slideAnalysis: generateMockSlideAnalysis()
   };
 };
