@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User, Users, GraduationCap } from 'lucide-react';
@@ -28,6 +27,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   actualSlides 
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const pdfViewerRef = useRef<HTMLIFrameElement>(null);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(prev + 1, slideAnalysis.length - 1));
@@ -36,6 +36,49 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const prevSlide = () => {
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
   };
+
+  const scrollToPage = (pageNumber: number) => {
+    console.log('Attempting to scroll to page:', pageNumber);
+    
+    if (pdfViewerRef.current) {
+      try {
+        // Method 1: Update iframe src with page fragment
+        const currentSrc = pdfViewerRef.current.src;
+        const baseUrl = currentSrc.split('#')[0];
+        const newSrc = `${baseUrl}#page=${pageNumber}`;
+        console.log('Setting PDF src to:', newSrc);
+        pdfViewerRef.current.src = newSrc;
+        
+        // Method 2: Try to access iframe content and scroll (fallback)
+        setTimeout(() => {
+          try {
+            const iframeDoc = pdfViewerRef.current?.contentDocument || pdfViewerRef.current?.contentWindow?.document;
+            if (iframeDoc) {
+              // Try to find and scroll to the page
+              const pageElement = iframeDoc.querySelector(`[data-page-number="${pageNumber}"]`);
+              if (pageElement) {
+                pageElement.scrollIntoView({ behavior: 'smooth' });
+              }
+            }
+          } catch (e) {
+            console.log('Cross-origin access blocked, using URL fragment method only');
+          }
+        }, 500);
+        
+      } catch (error) {
+        console.error('Error scrolling PDF:', error);
+      }
+    }
+  };
+
+  // Effect to scroll PDF when slide changes
+  useEffect(() => {
+    const currentAnalysis = slideAnalysis[currentSlide];
+    if (currentAnalysis && actualSlides && actualSlides[0]?.pdfUrl) {
+      console.log('Current slide changed to:', currentAnalysis.slideNumber);
+      scrollToPage(currentAnalysis.slideNumber);
+    }
+  }, [currentSlide, slideAnalysis, actualSlides]);
 
   const getInvestorIcon = (type: InvestorType) => {
     switch (type) {
@@ -70,7 +113,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   // Get the actual slide data if available
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
-  const pdfUrl = actualSlide?.pdfUrl;
+  const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? `${actualSlides[0].pdfUrl}#page=${currentAnalysis.slideNumber}` : undefined;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -88,6 +131,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left Side - Slide Preview */}
         <PPTPreview 
+          ref={pdfViewerRef}
           slideNumber={currentAnalysis.slideNumber}
           fileName={fileName}
           slideImageUrl={slideImageUrl}

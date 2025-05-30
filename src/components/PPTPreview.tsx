@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { FileText, Presentation, AlertCircle } from 'lucide-react';
@@ -11,13 +10,13 @@ interface PPTPreviewProps {
   className?: string;
 }
 
-const PPTPreview: React.FC<PPTPreviewProps> = ({ 
+const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({ 
   slideNumber, 
   fileName, 
   slideImageUrl,
   pdfUrl,
   className = '' 
-}) => {
+}, ref) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
 
@@ -61,6 +60,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
             {hasPdfUrl && (
               <div className="relative">
                 <iframe 
+                  ref={ref}
                   src={pdfUrl}
                   className="w-full h-[300px] rounded-lg border-0"
                   title={`PDF Viewer - ${fileName}`}
@@ -127,6 +127,8 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
       </div>
     </Card>
   );
-};
+});
+
+PPTPreview.displayName = 'PPTPreview';
 
 export default PPTPreview;
