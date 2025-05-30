@@ -37,49 +37,6 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
   };
 
-  const scrollToPage = (pageNumber: number) => {
-    console.log('Attempting to scroll to page:', pageNumber);
-    
-    if (pdfViewerRef.current) {
-      try {
-        // Method 1: Update iframe src with page fragment
-        const currentSrc = pdfViewerRef.current.src;
-        const baseUrl = currentSrc.split('#')[0];
-        const newSrc = `${baseUrl}#page=${pageNumber}`;
-        console.log('Setting PDF src to:', newSrc);
-        pdfViewerRef.current.src = newSrc;
-        
-        // Method 2: Try to access iframe content and scroll (fallback)
-        setTimeout(() => {
-          try {
-            const iframeDoc = pdfViewerRef.current?.contentDocument || pdfViewerRef.current?.contentWindow?.document;
-            if (iframeDoc) {
-              // Try to find and scroll to the page
-              const pageElement = iframeDoc.querySelector(`[data-page-number="${pageNumber}"]`);
-              if (pageElement) {
-                pageElement.scrollIntoView({ behavior: 'smooth' });
-              }
-            }
-          } catch (e) {
-            console.log('Cross-origin access blocked, using URL fragment method only');
-          }
-        }, 500);
-        
-      } catch (error) {
-        console.error('Error scrolling PDF:', error);
-      }
-    }
-  };
-
-  // Effect to scroll PDF when slide changes
-  useEffect(() => {
-    const currentAnalysis = slideAnalysis[currentSlide];
-    if (currentAnalysis && actualSlides && actualSlides[0]?.pdfUrl) {
-      console.log('Current slide changed to:', currentAnalysis.slideNumber);
-      scrollToPage(currentAnalysis.slideNumber);
-    }
-  }, [currentSlide, slideAnalysis, actualSlides]);
-
   const getInvestorIcon = (type: InvestorType) => {
     switch (type) {
       case 'vc': return Users;
@@ -113,7 +70,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   // Get the actual slide data if available
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
-  const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? `${actualSlides[0].pdfUrl}#page=${currentAnalysis.slideNumber}` : undefined;
+  const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? actualSlides[0].pdfUrl : undefined;
 
   return (
     <div className="space-y-6 sm:space-y-8">

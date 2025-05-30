@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { FileText, Presentation, AlertCircle } from 'lucide-react';
@@ -42,6 +43,11 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   const hasPdfUrl = pdfUrl && pdfUrl.length > 0;
   const showError = !hasValidImage && !hasPdfUrl || imageError;
 
+  // Calculate the offset for the PDF viewer
+  // Assuming each page is roughly 300px tall, offset by (slideNumber - 1) * 300px
+  const pageHeight = 300;
+  const offsetTop = (slideNumber - 1) * pageHeight;
+
   return (
     <Card className={`bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-2xl rounded-2xl overflow-hidden ${className}`}>
       <div className="aspect-[4/3] relative flex items-center justify-center p-6 sm:p-8">
@@ -58,15 +64,19 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
           {/* Content */}
           <div className="p-2">
             {hasPdfUrl && (
-              <div className="relative">
+              <div className="relative h-[300px] overflow-hidden rounded-lg">
                 <iframe 
                   ref={ref}
-                  src={pdfUrl}
-                  className="w-full h-[300px] rounded-lg border-0"
+                  src={pdfUrl.split('#')[0]} // Remove any existing fragments
+                  className="w-full border-0 transition-transform duration-500 ease-in-out"
+                  style={{ 
+                    height: '3000px', // Make it tall enough for multiple pages
+                    transform: `translateY(-${offsetTop}px)` // Offset to show the correct page
+                  }}
                   title={`PDF Viewer - ${fileName}`}
                 />
                 <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                  PDF
+                  PDF - Page {slideNumber}
                 </div>
               </div>
             )}
