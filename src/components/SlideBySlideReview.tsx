@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User, Users, GraduationCap } from 'lucide-react';
@@ -28,13 +27,40 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   actualSlides 
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const pdfIframeRef = useRef<HTMLIFrameElement>(null);
+
+  const scrollToPdfPage = (pageNumber: number) => {
+    if (pdfIframeRef.current && actualSlides?.[0]?.pdfUrl) {
+      try {
+        // Use the PDF.js viewer URL fragment to navigate to specific page
+        const pdfUrl = actualSlides[0].pdfUrl;
+        const newUrl = `${pdfUrl}#page=${pageNumber}`;
+        pdfIframeRef.current.src = newUrl;
+        console.log(`Scrolling PDF to page ${pageNumber}`);
+      } catch (error) {
+        console.error('Error scrolling PDF:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (currentAnalysis?.slideNumber && actualSlides?.[0]?.pdfUrl) {
+      scrollToPdfPage(currentAnalysis.slideNumber);
+    }
+  }, [currentSlide, actualSlides]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => Math.min(prev + 1, slideAnalysis.length - 1));
+    const newSlide = Math.min(currentSlide + 1, slideAnalysis.length - 1);
+    setCurrentSlide(newSlide);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => Math.max(prev - 1, 0));
+    const newSlide = Math.max(currentSlide - 1, 0);
+    setCurrentSlide(newSlide);
+  };
+
+  const goToSlide = (slideIndex: number) => {
+    setCurrentSlide(slideIndex);
   };
 
   const getInvestorIcon = (type: InvestorType) => {
@@ -70,7 +96,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   // Get the actual slide data if available
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
-  const pdfUrl = actualSlide?.pdfUrl;
+  const pdfUrl = actualSlides?.[0]?.pdfUrl; // Use the first slide's PDF URL
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -92,6 +118,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           fileName={fileName}
           slideImageUrl={slideImageUrl}
           pdfUrl={pdfUrl}
+          pdfIframeRef={pdfIframeRef}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 
@@ -174,7 +201,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           {slideAnalysis.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentSlide(index)}
+              onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-200 ${
                 index === currentSlide
                   ? 'bg-blue-600 scale-125'

@@ -8,6 +8,7 @@ interface PPTPreviewProps {
   fileName: string;
   slideImageUrl?: string;
   pdfUrl?: string;
+  pdfIframeRef?: React.RefObject<HTMLIFrameElement>;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
   fileName, 
   slideImageUrl,
   pdfUrl,
+  pdfIframeRef,
   className = '' 
 }) => {
   const [imageError, setImageError] = React.useState(false);
@@ -61,7 +63,8 @@ const PPTPreview: React.FC<PPTPreviewProps> = ({
             {hasPdfUrl && (
               <div className="relative">
                 <iframe 
-                  src={pdfUrl}
+                  ref={pdfIframeRef}
+                  src={`${pdfUrl}#page=${slideNumber}`}
                   className="w-full h-[300px] rounded-lg border-0"
                   title={`PDF Viewer - ${fileName}`}
                 />
