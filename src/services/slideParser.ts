@@ -1,7 +1,3 @@
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Use local worker or disable worker entirely
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 export interface SlideData {
   slideNumber: number;
@@ -12,13 +8,21 @@ export interface SlideData {
 
 export class SlideParser {
   static async parseFile(file: File): Promise<SlideData[]> {
-    console.log('Processing file:', file.name);
+    console.log('Creating native PDF viewer for file:', file.name);
     
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
     if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-      return await this.parsePDF(file);
+      // Create a blob URL for the PDF file
+      const pdfUrl = URL.createObjectURL(file);
+      
+      // Return a single slide data with the PDF URL for native viewing
+      return [{
+        slideNumber: 1,
+        pdfUrl: pdfUrl,
+        text: `PDF Document: ${file.name}`
+      }];
     } else if (
       fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       fileType === 'application/vnd.ms-powerpoint' ||
@@ -28,98 +32,6 @@ export class SlideParser {
       return await this.parsePowerPoint(file);
     } else {
       throw new Error(`Unsupported file type: ${fileType}`);
-    }
-  }
-
-  static async parsePDF(file: File): Promise<SlideData[]> {
-    try {
-      console.log('Parsing PDF with canvas rendering (no worker)...');
-      
-      // Create blob URL for native PDF viewing
-      const pdfUrl = URL.createObjectURL(file);
-      
-      // Load PDF without worker
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Disable worker to avoid CORS issues
-      const loadingTask = pdfjsLib.getDocument({
-        data: arrayBuffer,
-        useWorkerFetch: false,
-        isEvalSupported: false,
-        useSystemFonts: true
-      });
-      
-      const pdf = await loadingTask.promise;
-      const slides: SlideData[] = [];
-      
-      // Generate screenshots for each page using canvas
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-        console.log(`Rendering page ${pageNumber} of ${pdf.numPages}`);
-        
-        try {
-          const page = await pdf.getPage(pageNumber);
-          const scale = 1.5; // Good balance between quality and performance
-          const viewport = page.getViewport({ scale });
-          
-          // Create canvas for rendering
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          
-          if (!context) {
-            throw new Error('Could not get canvas context');
-          }
-          
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          
-          // Render PDF page to canvas with white background
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          
-          const renderContext = {
-            canvasContext: context,
-            viewport: viewport,
-          };
-          
-          await page.render(renderContext).promise;
-          
-          // Convert canvas to image URL with high quality
-          const imageUrl = canvas.toDataURL('image/png', 0.95);
-          
-          slides.push({
-            slideNumber: pageNumber,
-            imageUrl: imageUrl,
-            pdfUrl: pageNumber === 1 ? pdfUrl : undefined, // Only include pdfUrl for first slide
-            text: `PDF Page ${pageNumber}`
-          });
-          
-          // Clean up page resources
-          page.cleanup();
-          
-        } catch (pageError) {
-          console.error(`Error rendering page ${pageNumber}:`, pageError);
-          // Create fallback slide
-          slides.push({
-            slideNumber: pageNumber,
-            pdfUrl: pageNumber === 1 ? pdfUrl : undefined,
-            text: `PDF Page ${pageNumber} (Preview unavailable)`
-          });
-        }
-      }
-      
-      console.log(`Generated ${slides.length} page screenshots`);
-      return slides;
-      
-    } catch (error) {
-      console.error('Error parsing PDF:', error);
-      
-      // Fallback: create a single slide with just the PDF URL for native viewing
-      const pdfUrl = URL.createObjectURL(file);
-      return [{
-        slideNumber: 1,
-        pdfUrl: pdfUrl,
-        text: 'PDF Document (Native viewer only)'
-      }];
     }
   }
 

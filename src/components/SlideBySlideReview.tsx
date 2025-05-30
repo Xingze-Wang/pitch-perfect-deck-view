@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,6 @@ import { ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, ArrowRight, User
 import { InvestorType } from '@/services/geminiService';
 import { SlideData } from '@/services/slideParser';
 import PPTPreview from './PPTPreview';
-import SlideCarousel from './SlideCarousel';
 
 interface SlideAnalysis {
   slideNumber: number;
@@ -35,14 +35,6 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
 
   const prevSlide = () => {
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
-  };
-
-  const handleSlideChange = (slideNumber: number) => {
-    // Find the analysis for this slide number
-    const analysisIndex = slideAnalysis.findIndex(analysis => analysis.slideNumber === slideNumber);
-    if (analysisIndex !== -1) {
-      setCurrentSlide(analysisIndex);
-    }
   };
 
   const getInvestorIcon = (type: InvestorType) => {
@@ -94,11 +86,12 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left Side - Slide Carousel */}
-        <SlideCarousel 
-          slides={actualSlides || []}
+        {/* Left Side - Slide Preview */}
+        <PPTPreview 
+          slideNumber={currentAnalysis.slideNumber}
           fileName={fileName}
-          onSlideChange={handleSlideChange}
+          slideImageUrl={slideImageUrl}
+          pdfUrl={pdfUrl}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 
