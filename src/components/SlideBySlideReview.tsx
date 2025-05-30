@@ -67,9 +67,10 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
     );
   }
 
-  // Get the actual slide image URL if available
+  // Get the actual slide data if available
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
+  const pdfUrl = actualSlide?.pdfUrl;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -85,11 +86,12 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left Side - Actual Slide Preview */}
+        {/* Left Side - Slide Preview */}
         <PPTPreview 
           slideNumber={currentAnalysis.slideNumber}
           fileName={fileName}
           slideImageUrl={slideImageUrl}
+          pdfUrl={pdfUrl}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 
