@@ -1,4 +1,3 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source to CDN for better reliability
@@ -163,9 +162,7 @@ export class SlideParser {
           };
           
           const renderTask = page.render(renderContext);
-          console.log(`🖼️ Render task created for page ${pageNum}`, {
-            cancelled: renderTask.cancelled || false
-          });
+          console.log(`🖼️ Render task created for page ${pageNum}`);
           
           // Add timeout and detailed error handling
           const renderPromise = Promise.race([
