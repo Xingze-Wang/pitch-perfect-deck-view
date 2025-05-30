@@ -47,7 +47,7 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   // Calculate the offset for the PDF viewer
   // Assuming each page is roughly 300px tall, offset by (slideNumber - 1) * 300px + 30px for alignment
   const pageHeight = 300;
-  const alignmentOffset = -30;
+  const alignmentOffset = -50;
   const offsetTop = (slideNumber - 1) * pageHeight + alignmentOffset;
 
   return (
