@@ -79,8 +79,12 @@ ${investor.prompt}
 
 我需要你基于文件名"${fileName}"，模拟分析一个典型的创业公司pitch deck，并给出专业的${investor.title}反馈。请假设这是一个12页的标准pitch deck，包含：问题定义、解决方案、市场分析、商业模式、团队介绍、财务预测等典型内容。
 
+请生成真实的、多样化的反馈内容，不要每次都返回相同的答案。请根据文件名和投资人类型调整你的分析重点和语言风格。
+
 【输出要求】
 请直接以JSON格式回复，不要包含任何其他文字说明。评分标准：90-100分为优秀，80-89分为良好，70-79分为中等，60-69分为需改进，60分以下为较差。
+
+请确保每次生成的内容都有所不同，体现出真实的分析过程。
 
 {
   "overallScore": 75,
@@ -185,7 +189,7 @@ ${investor.prompt}
   ]
 }
 
-请确保回复内容严格按照上述JSON格式，不要添加任何解释文字。请基于${investor.title}的专业视角给出真实的评分和建议。
+请确保回复内容严格按照上述JSON格式，不要添加任何解释文字。请基于${investor.title}的专业视角给出真实的、多样化的评分和建议，让每次的分析结果都有所不同。
 `;
 
   try {
@@ -203,7 +207,7 @@ ${investor.prompt}
           }]
         }],
         generationConfig: {
-          temperature: 0.4,
+          temperature: 0.8, // 增加随机性，让每次生成的内容更多样化
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
@@ -258,25 +262,26 @@ ${investor.prompt}
       throw new Error('Failed to parse JSON from Gemini response');
     }
     
-    // Validate the analysis structure
+    // Validate and ensure required fields exist
     if (!analysis.slideAnalysis || !Array.isArray(analysis.slideAnalysis)) {
-      console.warn('Invalid slideAnalysis in response, using fallback');
-      analysis.slideAnalysis = generateMockSlideAnalysis(investorType);
+      console.error('Invalid slideAnalysis in response');
+      throw new Error('Invalid slideAnalysis structure from Gemini');
     }
     
-    if (!analysis.overallScore) {
-      analysis.overallScore = Math.floor(Math.random() * 30) + 70;
+    if (!analysis.overallScore || typeof analysis.overallScore !== 'number') {
+      console.error('Invalid overallScore in response');
+      throw new Error('Invalid overallScore from Gemini');
     }
     
-    if (!analysis.metrics) {
-      analysis.metrics = generateDynamicMetrics();
+    if (!analysis.metrics || typeof analysis.metrics !== 'object') {
+      console.error('Invalid metrics in response');
+      throw new Error('Invalid metrics from Gemini');
     }
     
     return analysis;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
-    // Fallback to mock data if API fails
-    return generateMockAnalysis(fileName, investorType);
+    throw error; // 不再使用fallback，直接抛出错误
   }
 };
 
