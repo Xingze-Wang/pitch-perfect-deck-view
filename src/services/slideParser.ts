@@ -1,4 +1,9 @@
 
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure the worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+
 export interface SlideData {
   slideNumber: number;
   imageUrl?: string;
@@ -8,21 +13,13 @@ export interface SlideData {
 
 export class SlideParser {
   static async parseFile(file: File): Promise<SlideData[]> {
-    console.log('Creating native PDF viewer for file:', file.name);
+    console.log('Processing file:', file.name);
     
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
     if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-      // Create a blob URL for the PDF file
-      const pdfUrl = URL.createObjectURL(file);
-      
-      // Return a single slide data with the PDF URL for native viewing
-      return [{
-        slideNumber: 1,
-        pdfUrl: pdfUrl,
-        text: `PDF Document: ${file.name}`
-      }];
+      return await this.parsePDF(file);
     } else if (
       fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       fileType === 'application/vnd.ms-powerpoint' ||
@@ -32,6 +29,60 @@ export class SlideParser {
       return await this.parsePowerPoint(file);
     } else {
       throw new Error(`Unsupported file type: ${fileType}`);
+    }
+  }
+
+  static async parsePDF(file: File): Promise<SlideData[]> {
+    try {
+      console.log('Parsing PDF with screenshots...');
+      
+      // Create blob URL for native PDF viewing
+      const pdfUrl = URL.createObjectURL(file);
+      
+      // Load PDF for page rendering
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      const slides: SlideData[] = [];
+      
+      // Generate screenshots for each page
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        console.log(`Rendering page ${pageNumber} of ${pdf.numPages}`);
+        
+        const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better quality
+        
+        // Create canvas for rendering
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        // Render PDF page to canvas
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Convert canvas to image URL
+        const imageUrl = canvas.toDataURL('image/jpeg', 0.9);
+        
+        slides.push({
+          slideNumber: pageNumber,
+          imageUrl: imageUrl,
+          pdfUrl: pageNumber === 1 ? pdfUrl : undefined, // Only include pdfUrl for first slide
+          text: `PDF Page ${pageNumber}`
+        });
+      }
+      
+      console.log(`Generated ${slides.length} page screenshots`);
+      return slides;
+      
+    } catch (error) {
+      console.error('Error parsing PDF:', error);
+      throw new Error(`Failed to parse PDF: ${error.message}`);
     }
   }
 
