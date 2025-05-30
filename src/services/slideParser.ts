@@ -1,3 +1,4 @@
+
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker source to CDN for better reliability
@@ -49,18 +50,19 @@ export class SlideParser {
       const pdf = await loadingTask.promise;
       console.log('✅ PDF loaded successfully!', {
         numPages: pdf.numPages,
-        fingerprint: pdf.fingerprint
+        fingerprints: (pdf as any).fingerprints || 'N/A'
       });
       
       // Get and log PDF metadata
       try {
         console.log('🔄 Getting PDF metadata...');
         const metadata = await pdf.getMetadata();
+        const info = metadata.info as any;
         console.log('📊 PDF Metadata:', {
-          title: metadata.info?.Title || 'N/A',
-          creator: metadata.info?.Creator || 'N/A',
-          producer: metadata.info?.Producer || 'N/A',
-          creationDate: metadata.info?.CreationDate || 'N/A'
+          title: info?.Title || 'N/A',
+          creator: info?.Creator || 'N/A',
+          producer: info?.Producer || 'N/A',
+          creationDate: info?.CreationDate || 'N/A'
         });
       } catch (metaError) {
         console.warn('⚠️ Metadata extraction failed:', metaError);
@@ -78,7 +80,7 @@ export class SlideParser {
           console.log(`🔄 Loading page ${pageNum}...`);
           const page = await pdf.getPage(pageNum);
           console.log(`✅ Page ${pageNum} loaded`, {
-            pageIndex: page.pageIndex,
+            pageIndex: (page as any)._pageIndex || 'N/A',
             pageNumber: page.pageNumber
           });
           
@@ -162,7 +164,7 @@ export class SlideParser {
           
           const renderTask = page.render(renderContext);
           console.log(`🖼️ Render task created for page ${pageNum}`, {
-            cancelled: renderTask.cancelled
+            cancelled: renderTask.cancelled || false
           });
           
           // Add timeout and detailed error handling

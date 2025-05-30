@@ -17,10 +17,10 @@ const LoadingState = () => {
             </p>
             
             {/* Simple dots without circle */}
-            <div className="flex justify-center space-x-2 mt-6">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse delay-150"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse delay-300"></div>
+            <div className="flex justify-center space-x-1 mt-6">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse delay-150"></div>
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse delay-300"></div>
             </div>
           </div>
         </div>
