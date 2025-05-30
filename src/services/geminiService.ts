@@ -1,3 +1,4 @@
+
 const GEMINI_API_KEY = 'AIzaSyB3PbiunEBO9K1c_MuBCjl8yexCZTb9N1w';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
@@ -34,52 +35,84 @@ const investorPrompts = {
 你现在是顶级风投的合伙人，专注于B轮及以上投资，管理着数十亿资金。你以严格的尽调标准和对商业模式的深度理解著称。请用你专业而犀利的投资视角对pitch deck进行评估。
 
 【评估重点】
-- 市场规模和增长潜力
-- 商业模式的可扩展性
-- 团队的执行能力
-- 竞争壁垒和护城河
-- 财务模型和增长指标
+- 市场规模和增长潜力（TAM/SAM/SOM分析）
+- 商业模式的可扩展性和盈利能力
+- 团队的执行能力和track record
+- 竞争壁垒和护城河的深度
+- 财务模型和关键指标的健康度
+- 退出策略和估值合理性
+
+【评分标准】
+80分以上：强烈推荐投资，符合基金投资标准
+70-79分：有投资价值但需要进一步尽调
+60-69分：存在较大风险，需要重大改进
+60分以下：不建议投资
 `
   },
   angel: {
     title: '天使投资人',
     prompt: `
 【角色设定】
-你是一位经验丰富的天使投资人，曾是成功的连续创业者，现在专注于早期项目投资。你更关注创始人的潜力、市场时机和产品创新性。
+你是一位经验丰富的天使投资人，曾是成功的连续创业者，现在专注于早期项目投资。你更关注创始人的潜力、市场时机和产品创新性。你的投资风格相对宽松，更看重团队和市场机会。
 
 【评估重点】
-- 创始人的背景和执行力
-- 产品的创新性和用户价值
-- 市场时机和早期牵引力
-- 团队配置和学习能力
-- 早期用户反馈和迭代速度
+- 创始人的背景、执行力和学习能力
+- 产品的创新性和用户价值主张
+- 市场时机和早期牵引力证据
+- 团队配置的互补性
+- 早期用户反馈和产品迭代能力
+- 解决真实痛点的程度
+
+【评分标准】
+70分以上：值得天使投资，看好长期潜力
+60-69分：有潜力但需要观察
+50-59分：风险较高，需要大幅改进
+50分以下：不适合天使投资
 `
   },
   mentor: {
     title: '创业班主任',
     prompt: `
 【角色设定】
-你是创业加速器的资深导师，被称为"创业班主任"。你见过无数创业项目的成功与失败，擅长给出实用的建议和改进方向。你的评价风格温和而建设性，重点是帮助创业者成长。
+你是创业加速器的资深导师，被称为"创业班主任"。你见过无数创业项目的成功与失败，擅长给出实用的建议和改进方向。你的评价风格温和而建设性，重点是帮助创业者成长和学习。
 
 【评估重点】
-- 如何优化pitch的表达方式
-- 具体的改进建议和行动计划
-- 常见的创业陷阱和避免方法
-- 下一步的具体执行步骤
-- 团队能力提升建议
+- 如何优化pitch的表达方式和逻辑
+- 具体的改进建议和可执行的行动计划
+- 常见的创业陷阱和如何避免
+- 下一步的具体执行步骤和里程碑
+- 团队能力提升和学习规划
+- 如何更好地验证商业假设
+
+【评分标准】
+重点不在绝对分数，而在成长潜力和学习能力
+给出建设性的分数，通常在60-85分之间
+重点关注改进空间和具体建议
 `
   }
 };
 
 export const analyzePitchWithGemini = async (fileName: string, investorType: InvestorType = 'vc'): Promise<GeminiAnalysis> => {
   const investor = investorPrompts[investorType];
+  const timestamp = Date.now();
+  const randomSeed = Math.random().toString(36).substring(7);
   
   const prompt = `
 ${investor.prompt}
 
-我需要你基于文件名"${fileName}"，模拟分析一个典型的创业公司pitch deck，并给出专业的${investor.title}反馈。请假设这是一个12页的标准pitch deck，包含：问题定义、解决方案、市场分析、商业模式、团队介绍、财务预测等典型内容。
+【当前分析任务】
+文件名：${fileName}
+投资人类型：${investor.title}
+分析时间：${new Date().toLocaleString('zh-CN')}
+随机种子：${randomSeed}
 
-请生成真实的、多样化的反馈内容，不要每次都返回相同的答案。请根据文件名和投资人类型调整你的分析重点和语言风格。
+请基于上述信息，模拟分析一个真实的创业公司pitch deck。请生成完全不同的、个性化的反馈内容。每次分析都应该反映不同的项目特点、不同的问题和机会。
+
+【重要要求】
+1. 请确保每次生成的内容都完全不同，包括评分、优缺点、建议等
+2. 评分要真实反映${investor.title}的投资标准和风险偏好
+3. 根据文件名推测可能的行业和商业模式，给出针对性分析
+4. 生成的内容要具体、可执行，避免空泛的建议
 
 【评分维度说明】
 - reliability (靠谱): 项目的可行性、执行能力、风险控制
@@ -89,118 +122,116 @@ ${investor.prompt}
 - cognition (认知): 对行业、用户、趋势的认知深度
 
 【输出要求】
-请直接以JSON格式回复，不要包含任何其他文字说明。评分标准：90-100分为优秀，80-89分为良好，70-79分为中等，60-69分为需改进，60分以下为较差。
+请直接以JSON格式回复，不要包含任何其他文字说明。
 
-请确保每次生成的内容都有所不同，体现出真实的分析过程。
+请确保回复内容严格按照JSON格式，基于${investor.title}的专业视角给出真实的、每次都不同的评分和建议。
 
 {
-  "overallScore": 75,
+  "overallScore": 82,
   "metrics": {
-    "reliability": 80,
-    "confidence": 70,
-    "market": 75,
-    "team": 75,
-    "cognition": 85
+    "reliability": 85,
+    "confidence": 78,
+    "market": 88,
+    "team": 80,
+    "cognition": 79
   },
   "insights": [
-    "商业模式具备可扩展性，单位经济效益清晰",
-    "团队背景与市场需求高度匹配",
-    "护城河建设思路明确，具备先发优势"
+    "基于文件名分析的具体行业洞察",
+    "针对该项目的独特市场机会分析",
+    "符合当前投资趋势的战略价值"
   ],
   "recommendations": [
-    "加强CAC/LTV数据透明度，证明增长的可持续性",
-    "补充竞争壁垒的量化指标",
-    "提供更具体的市场渗透率预测"
+    "针对该项目的具体改进建议",
+    "基于投资人类型的专业建议",
+    "可执行的下一步行动计划"
   ],
   "strengths": [
-    "PMF验证充分，用户留存数据健康",
-    "商业化路径清晰，变现能力强"
+    "该项目的核心竞争优势",
+    "团队或产品的突出亮点"
   ],
   "weaknesses": [
-    "市场天花板论证不够充分",
-    "团队技术基因需要补强"
+    "需要改进的关键问题",
+    "潜在的风险点"
   ],
   "slideAnalysis": [
     {
       "slideNumber": 1,
-      "highlight": "问题定义精准，直击用户痛点",
-      "risks": ["市场规模缺乏权威数据支撑", "用户需求的紧迫性论证不足"],
-      "improvements": "补充第三方市场调研报告，增加用户访谈数据"
+      "highlight": "针对该项目的具体亮点分析",
+      "risks": ["具体的风险点1", "具体的风险点2"],
+      "improvements": "具体的改进建议"
     },
     {
       "slideNumber": 2,
-      "highlight": "解决方案技术路径清晰",
-      "risks": ["技术壁垒不够高", "可被大厂快速复制"],
-      "improvements": "强化核心技术的专利布局，突出算法优势"
+      "highlight": "第二页的独特分析",
+      "risks": ["不同的风险分析", "新的关注点"],
+      "improvements": "针对性的改进方案"
     },
     {
       "slideNumber": 3,
-      "highlight": "商业模式闭环逻辑合理",
-      "risks": ["单位经济模型假设过于乐观", "规模化成本控制存疑"],
-      "improvements": "提供保守情况下的财务预测，增加成本结构分析"
+      "highlight": "商业模式的专业点评",
+      "risks": ["商业模式相关风险", "盈利模式挑战"],
+      "improvements": "商业模式优化建议"
     },
     {
       "slideNumber": 4,
-      "highlight": "市场时机把握精准",
-      "risks": ["TAM计算方法存在水分", "竞争格局分析过于简化"],
-      "improvements": "使用bottom-up方法重新计算市场规模，增加竞品深度分析"
+      "highlight": "市场分析的专业评价",
+      "risks": ["市场相关风险", "竞争环境挑战"],
+      "improvements": "市场策略改进建议"
     },
     {
       "slideNumber": 5,
-      "highlight": "产品功能演示直观有效",
-      "risks": ["用户体验优势难以量化", "产品迭代速度可能跟不上需求"],
-      "improvements": "增加用户满意度数据，展示产品roadmap"
+      "highlight": "产品功能的投资人视角",
+      "risks": ["产品风险评估", "技术挑战"],
+      "improvements": "产品优化方向"
     },
     {
       "slideNumber": 6,
-      "highlight": "增长数据趋势良好",
-      "risks": ["用户获取成本上升趋势明显", "留存率在关键节点有下滑"],
-      "improvements": "详细分析CAC上升原因，制定用户留存改善计划"
+      "highlight": "增长数据的专业解读",
+      "risks": ["增长可持续性风险", "数据质量问题"],
+      "improvements": "增长策略优化"
     },
     {
       "slideNumber": 7,
-      "highlight": "团队配置合理，经验互补",
-      "risks": ["缺乏行业深度专家", "技术负责人背景不够硬"],
-      "improvements": "引入行业资深顾问，补强技术团队核心人员"
+      "highlight": "团队评估的投资人观点",
+      "risks": ["团队配置风险", "执行能力评估"],
+      "improvements": "团队建设建议"
     },
     {
       "slideNumber": 8,
-      "highlight": "财务预测模型相对保守",
-      "risks": ["收入增长假设过于线性", "成本结构分析不够细致"],
-      "improvements": "增加敏感性分析，细化各项成本的增长假设"
+      "highlight": "财务模型的专业分析",
+      "risks": ["财务假设风险", "盈利能力挑战"],
+      "improvements": "财务策略建议"
     },
     {
       "slideNumber": 9,
-      "highlight": "融资用途规划明确",
-      "risks": ["资金使用效率预期偏高", "里程碑设置不够具体"],
-      "improvements": "细化每个季度的关键指标和里程碑"
+      "highlight": "融资规划的投资人视角",
+      "risks": ["资金使用效率风险", "里程碑设置问题"],
+      "improvements": "融资策略优化"
     },
     {
       "slideNumber": 10,
-      "highlight": "竞争分析覆盖面广",
-      "risks": ["差异化优势表述模糊", "护城河深度不够"],
-      "improvements": "量化核心竞争优势，展示具体的壁垒建设计划"
+      "highlight": "竞争分析的专业评价",
+      "risks": ["竞争壁垒不足", "差异化不明显"],
+      "improvements": "竞争策略建议"
     },
     {
       "slideNumber": 11,
-      "highlight": "Go-to-market策略清晰",
-      "risks": ["用户获取渠道过于单一", "转化率假设缺乏验证"],
-      "improvements": "多元化获客渠道，提供转化率的验证数据"
+      "highlight": "市场策略的投资人观点",
+      "risks": ["获客成本风险", "渠道依赖问题"],
+      "improvements": "GTM策略优化"
     },
     {
       "slideNumber": 12,
-      "highlight": "退出策略考虑周全",
-      "risks": ["估值预期与市场现实存在差距", "时间线过于乐观"],
-      "improvements": "基于可比公司调整估值预期，制定更现实的时间规划"
+      "highlight": "退出策略的专业分析",
+      "risks": ["估值预期风险", "退出时机不确定"],
+      "improvements": "退出规划建议"
     }
   ]
 }
-
-请确保回复内容严格按照上述JSON格式，不要添加任何解释文字。请基于${investor.title}的专业视角给出真实的、多样化的评分和建议，让每次的分析结果都有所不同。
 `;
 
   try {
-    console.log(`Calling Gemini API for ${investor.title} analysis...`);
+    console.log(`Calling Gemini API for ${investor.title} analysis with seed: ${randomSeed}...`);
     
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -214,7 +245,7 @@ ${investor.prompt}
           }]
         }],
         generationConfig: {
-          temperature: 0.8, // 增加随机性，让每次生成的内容更多样化
+          temperature: 0.9, // 提高随机性，确保每次都不同
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
@@ -285,134 +316,18 @@ ${investor.prompt}
       throw new Error('Invalid metrics from Gemini');
     }
     
+    // Ensure all required metric fields exist
+    const requiredMetrics = ['reliability', 'confidence', 'market', 'team', 'cognition'];
+    for (const metric of requiredMetrics) {
+      if (typeof analysis.metrics[metric] !== 'number') {
+        console.error(`Missing or invalid metric: ${metric}`);
+        throw new Error(`Invalid metric: ${metric}`);
+      }
+    }
+    
     return analysis;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
-    throw error; // 不再使用fallback，直接抛出错误
+    throw error;
   }
-};
-
-const generateDynamicMetrics = () => {
-  return {
-    reliability: Math.floor(Math.random() * 25) + 75,
-    confidence: Math.floor(Math.random() * 25) + 70,
-    market: Math.floor(Math.random() * 30) + 65,
-    team: Math.floor(Math.random() * 25) + 70,
-    cognition: Math.floor(Math.random() * 25) + 75,
-  };
-};
-
-const generateMockSlideAnalysis = (investorType: InvestorType): SlideAnalysis[] => {
-  const baseAnalysis = [
-    {
-      slideNumber: 1,
-      highlight: "问题定义精准，直击用户痛点",
-      risks: ["市场规模缺乏权威数据支撑", "用户需求的紧迫性论证不足"],
-      improvements: "补充第三方市场调研报告，增加用户访谈数据"
-    },
-    {
-      slideNumber: 2,
-      highlight: "解决方案技术路径清晰",
-      risks: ["技术壁垒不够高", "可被大厂快速复制"],
-      improvements: "强化核心技术的专利布局，突出算法优势"
-    },
-    {
-      slideNumber: 3,
-      highlight: "商业模式闭环逻辑合理",
-      risks: ["单位经济模型假设过于乐观", "规模化成本控制存疑"],
-      improvements: "提供保守情况下的财务预测，增加成本结构分析"
-    },
-    {
-      slideNumber: 4,
-      highlight: "市场时机把握精准",
-      risks: ["TAM计算方法存在水分", "竞争格局分析过于简化"],
-      improvements: "使用bottom-up方法重新计算市场规模，增加竞品深度分析"
-    },
-    {
-      slideNumber: 5,
-      highlight: "产品功能演示直观有效",
-      risks: ["用户体验优势难以量化", "产品迭代速度可能跟不上需求"],
-      improvements: "增加用户满意度数据，展示产品roadmap"
-    },
-    {
-      slideNumber: 6,
-      highlight: "增长数据趋势良好",
-      risks: ["用户获取成本上升趋势明显", "留存率在关键节点有下滑"],
-      improvements: "详细分析CAC上升原因，制定用户留存改善计划"
-    },
-    {
-      slideNumber: 7,
-      highlight: "团队配置合理，经验互补",
-      risks: ["缺乏行业深度专家", "技术负责人背景不够硬"],
-      improvements: "引入行业资深顾问，补强技术团队核心人员"
-    },
-    {
-      slideNumber: 8,
-      highlight: "财务预测模型相对保守",
-      risks: ["收入增长假设过于线性", "成本结构分析不够细致"],
-      improvements: "增加敏感性分析，细化各项成本的增长假设"
-    },
-    {
-      slideNumber: 9,
-      highlight: "融资用途规划明确",
-      risks: ["资金使用效率预期偏高", "里程碑设置不够具体"],
-      improvements: "细化每个季度的关键指标和里程碑"
-    },
-    {
-      slideNumber: 10,
-      highlight: "竞争分析覆盖面广",
-      risks: ["差异化优势表述模糊", "护城河深度不够"],
-      improvements: "量化核心竞争优势，展示具体的壁垒建设计划"
-    },
-    {
-      slideNumber: 11,
-      highlight: "Go-to-market策略清晰",
-      risks: ["用户获取渠道过于单一", "转化率假设缺乏验证"],
-      improvements: "多元化获客渠道，提供转化率的验证数据"
-    },
-    {
-      slideNumber: 12,
-      highlight: "退出策略考虑周全",
-      risks: ["估值预期与市场现实存在差距", "时间线过于乐观"],
-      improvements: "基于可比公司调整估值预期，制定更现实的时间规划"
-    }
-  ];
-
-  // Customize based on investor type
-  if (investorType === 'mentor') {
-    return baseAnalysis.map(slide => ({
-      ...slide,
-      improvements: `【班主任建议】${slide.improvements}，建议制定具体的执行时间表`
-    }));
-  }
-
-  return baseAnalysis;
-};
-
-const generateMockAnalysis = (fileName: string, investorType: InvestorType): GeminiAnalysis => {
-  const investorContext = investorPrompts[investorType];
-  
-  return {
-    overallScore: Math.floor(Math.random() * 30) + 70,
-    metrics: generateDynamicMetrics(),
-    insights: [
-      "商业模式具备可扩展性，单位经济效益清晰",
-      "团队背景与市场需求高度匹配",
-      "护城河建设思路明确，具备先发优势"
-    ],
-    recommendations: [
-      "加强CAC/LTV数据透明度，证明增长的可持续性",
-      "补充竞争壁垒的量化指标",
-      "提供更具体的市场渗透率预测"
-    ],
-    strengths: [
-      "PMF验证充分，用户留存数据健康",
-      "商业化路径清晰，变现能力强"
-    ],
-    weaknesses: [
-      "市场天花板论证不够充分",
-      "团队技术基因需要补强"
-    ],
-    slideAnalysis: generateMockSlideAnalysis(investorType)
-  };
 };
