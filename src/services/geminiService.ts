@@ -11,11 +11,11 @@ export interface SlideAnalysis {
 export interface GeminiAnalysis {
   overallScore: number;
   metrics: {
-    clarity: number;
-    market: number;
-    team: number;
-    traction: number;
-    financial: number;
+    reliability: number;    // 靠谱
+    confidence: number;     // 自信
+    market: number;         // 市场
+    team: number;          // 团队
+    cognition: number;     // 认知
   };
   insights: string[];
   recommendations: string[];
@@ -81,6 +81,13 @@ ${investor.prompt}
 
 请生成真实的、多样化的反馈内容，不要每次都返回相同的答案。请根据文件名和投资人类型调整你的分析重点和语言风格。
 
+【评分维度说明】
+- reliability (靠谱): 项目的可行性、执行能力、风险控制
+- confidence (自信): 创始人和团队的表达自信度、对项目的信心
+- market (市场): 市场机会、竞争分析、商业模式
+- team (团队): 团队配置、背景、互补性
+- cognition (认知): 对行业、用户、趋势的认知深度
+
 【输出要求】
 请直接以JSON格式回复，不要包含任何其他文字说明。评分标准：90-100分为优秀，80-89分为良好，70-79分为中等，60-69分为需改进，60分以下为较差。
 
@@ -89,11 +96,11 @@ ${investor.prompt}
 {
   "overallScore": 75,
   "metrics": {
-    "clarity": 80,
-    "market": 70,
+    "reliability": 80,
+    "confidence": 70,
+    "market": 75,
     "team": 75,
-    "traction": 65,
-    "financial": 80
+    "cognition": 85
   },
   "insights": [
     "商业模式具备可扩展性，单位经济效益清晰",
@@ -287,11 +294,11 @@ ${investor.prompt}
 
 const generateDynamicMetrics = () => {
   return {
-    clarity: Math.floor(Math.random() * 25) + 75,
+    reliability: Math.floor(Math.random() * 25) + 75,
+    confidence: Math.floor(Math.random() * 25) + 70,
     market: Math.floor(Math.random() * 30) + 65,
     team: Math.floor(Math.random() * 25) + 70,
-    traction: Math.floor(Math.random() * 40) + 50,
-    financial: Math.floor(Math.random() * 35) + 60,
+    cognition: Math.floor(Math.random() * 25) + 75,
   };
 };
 

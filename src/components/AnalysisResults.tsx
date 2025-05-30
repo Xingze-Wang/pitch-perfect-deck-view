@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -56,11 +55,11 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ data }) => {
   };
 
   const metricLabels = {
-    clarity: '表达清晰度',
-    market: '市场机会', 
+    reliability: '靠谱程度',
+    confidence: '自信表达', 
+    market: '市场洞察',
     team: '团队实力',
-    traction: '牵引力验证',
-    financial: '财务模型'
+    cognition: '认知深度'
   };
 
   const getInvestorIcon = (type: InvestorType) => {
