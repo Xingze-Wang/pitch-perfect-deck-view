@@ -1,8 +1,7 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure the worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+// Use local worker or disable worker entirely
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 export interface SlideData {
   slideNumber: number;
@@ -34,47 +33,78 @@ export class SlideParser {
 
   static async parsePDF(file: File): Promise<SlideData[]> {
     try {
-      console.log('Parsing PDF with screenshots...');
+      console.log('Parsing PDF with canvas rendering (no worker)...');
       
       // Create blob URL for native PDF viewing
       const pdfUrl = URL.createObjectURL(file);
       
-      // Load PDF for page rendering
+      // Load PDF without worker
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       
+      // Disable worker to avoid CORS issues
+      const loadingTask = pdfjsLib.getDocument({
+        data: arrayBuffer,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true
+      });
+      
+      const pdf = await loadingTask.promise;
       const slides: SlideData[] = [];
       
-      // Generate screenshots for each page
+      // Generate screenshots for each page using canvas
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
         console.log(`Rendering page ${pageNumber} of ${pdf.numPages}`);
         
-        const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better quality
-        
-        // Create canvas for rendering
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d')!;
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        // Render PDF page to canvas
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport,
-        };
-        
-        await page.render(renderContext).promise;
-        
-        // Convert canvas to image URL
-        const imageUrl = canvas.toDataURL('image/jpeg', 0.9);
-        
-        slides.push({
-          slideNumber: pageNumber,
-          imageUrl: imageUrl,
-          pdfUrl: pageNumber === 1 ? pdfUrl : undefined, // Only include pdfUrl for first slide
-          text: `PDF Page ${pageNumber}`
-        });
+        try {
+          const page = await pdf.getPage(pageNumber);
+          const scale = 1.5; // Good balance between quality and performance
+          const viewport = page.getViewport({ scale });
+          
+          // Create canvas for rendering
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          
+          if (!context) {
+            throw new Error('Could not get canvas context');
+          }
+          
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          
+          // Render PDF page to canvas with white background
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport,
+          };
+          
+          await page.render(renderContext).promise;
+          
+          // Convert canvas to image URL with high quality
+          const imageUrl = canvas.toDataURL('image/png', 0.95);
+          
+          slides.push({
+            slideNumber: pageNumber,
+            imageUrl: imageUrl,
+            pdfUrl: pageNumber === 1 ? pdfUrl : undefined, // Only include pdfUrl for first slide
+            text: `PDF Page ${pageNumber}`
+          });
+          
+          // Clean up page resources
+          page.cleanup();
+          
+        } catch (pageError) {
+          console.error(`Error rendering page ${pageNumber}:`, pageError);
+          // Create fallback slide
+          slides.push({
+            slideNumber: pageNumber,
+            pdfUrl: pageNumber === 1 ? pdfUrl : undefined,
+            text: `PDF Page ${pageNumber} (Preview unavailable)`
+          });
+        }
       }
       
       console.log(`Generated ${slides.length} page screenshots`);
@@ -82,7 +112,14 @@ export class SlideParser {
       
     } catch (error) {
       console.error('Error parsing PDF:', error);
-      throw new Error(`Failed to parse PDF: ${error.message}`);
+      
+      // Fallback: create a single slide with just the PDF URL for native viewing
+      const pdfUrl = URL.createObjectURL(file);
+      return [{
+        slideNumber: 1,
+        pdfUrl: pdfUrl,
+        text: 'PDF Document (Native viewer only)'
+      }];
     }
   }
 
