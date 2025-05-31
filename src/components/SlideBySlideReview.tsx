@@ -30,31 +30,8 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const pdfViewerRef = useRef<HTMLIFrameElement>(null);
 
-  // Use the actual number of slides from the parsed file, fallback to slideAnalysis length
-  const totalSlides = actualSlides?.length || slideAnalysis.length;
-  
-  // Ensure we have analysis for all actual slides - generate missing ones if needed
-  const completeSlideAnalysis = React.useMemo(() => {
-    if (!actualSlides || slideAnalysis.length >= actualSlides.length) {
-      return slideAnalysis;
-    }
-    
-    // Generate basic analysis for missing slides
-    const missingAnalyses: SlideAnalysis[] = [];
-    for (let i = slideAnalysis.length; i < actualSlides.length; i++) {
-      missingAnalyses.push({
-        slideNumber: i + 1,
-        highlight: `第 ${i + 1} 页内容展示`,
-        risks: ["需要进一步分析该页面内容"],
-        improvements: "建议优化页面布局和内容表达"
-      });
-    }
-    
-    return [...slideAnalysis, ...missingAnalyses];
-  }, [slideAnalysis, actualSlides]);
-
   const nextSlide = () => {
-    setCurrentSlide((prev) => Math.min(prev + 1, completeSlideAnalysis.length - 1));
+    setCurrentSlide((prev) => Math.min(prev + 1, slideAnalysis.length - 1));
   };
 
   const prevSlide = () => {
@@ -80,10 +57,10 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   };
 
   const InvestorIcon = getInvestorIcon(investorType);
-  const currentAnalysis = completeSlideAnalysis[currentSlide];
+  const currentAnalysis = slideAnalysis[currentSlide];
 
   if (!currentAnalysis) {
-    console.log('No current analysis found, completeSlideAnalysis:', completeSlideAnalysis, 'currentSlide:', currentSlide);
+    console.log('No current analysis found, slideAnalysis:', slideAnalysis, 'currentSlide:', currentSlide);
     return (
       <div className="text-center p-8">
         <p className="text-gray-500">无法加载幻灯片分析数据</p>
@@ -118,7 +95,6 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           slideImageUrl={slideImageUrl}
           pdfUrl={pdfUrl}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
-          totalSlides={totalSlides}
         />
 
         {/* Right Side - Analysis Feedback */}
@@ -129,7 +105,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
                 第 {currentAnalysis.slideNumber} 页 分析
               </h3>
               <div className="text-sm text-gray-500">
-                {currentSlide + 1} / {completeSlideAnalysis.length}
+                {currentSlide + 1} / {slideAnalysis.length}
               </div>
             </div>
 
@@ -197,7 +173,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
         </Button>
 
         <div className="flex space-x-1.5">
-          {completeSlideAnalysis.map((_, index) => (
+          {slideAnalysis.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
@@ -212,7 +188,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
 
         <Button
           onClick={nextSlide}
-          disabled={currentSlide === completeSlideAnalysis.length - 1}
+          disabled={currentSlide === slideAnalysis.length - 1}
           variant="outline"
           className="flex items-center space-x-2 w-full sm:w-auto"
         >
