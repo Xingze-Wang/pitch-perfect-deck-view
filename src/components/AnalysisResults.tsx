@@ -20,11 +20,11 @@ interface AnalysisData {
   investorType: InvestorType;
   actualSlides?: SlideData[];
   metrics: {
-    clarity: number;
+    reliability: number;
+    confidence: number;
     market: number;
     team: number;
-    traction: number;
-    financial: number;
+    cognition: number;
   };
   insights: string[];
   recommendations: string[];
