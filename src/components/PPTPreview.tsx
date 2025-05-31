@@ -9,6 +9,7 @@ interface PPTPreviewProps {
   slideImageUrl?: string;
   pdfUrl?: string;
   className?: string;
+  totalSlides?: number;
 }
 
 const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({ 
@@ -16,16 +17,17 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   fileName, 
   slideImageUrl,
   pdfUrl,
-  className = '' 
+  className = '',
+  totalSlides = 1
 }, ref) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('PPTPreview - Slide:', slideNumber, 'Image URL available:', !!slideImageUrl, 'PDF URL available:', !!pdfUrl);
+    console.log('PPTPreview - Slide:', slideNumber, 'Total slides:', totalSlides, 'Image URL available:', !!slideImageUrl, 'PDF URL available:', !!pdfUrl);
     setImageError(false);
     setImageLoaded(false);
-  }, [slideNumber, slideImageUrl, pdfUrl]);
+  }, [slideNumber, slideImageUrl, pdfUrl, totalSlides]);
 
   const handleImageLoad = () => {
     console.log('Image loaded successfully for slide', slideNumber);
@@ -43,11 +45,17 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   const hasPdfUrl = pdfUrl && pdfUrl.length > 0;
   const showError = !hasValidImage && !hasPdfUrl || imageError;
 
-  // Calculate the offset for the PDF viewer - reduced by another 10%
-  // Page height reduced from 270 to 243 (10% less), alignment offset from -45 to -40.5
-  const pageHeight = 243; // Reduced from 270 to 243 (10% less)
-  const alignmentOffset = -40; // Reduced from -45 to approximately -40 (10% less)
-  const offsetTop = (slideNumber - 1) * pageHeight + alignmentOffset;
+  // Calculate the offset for the PDF viewer with bounds checking
+  const pageHeight = 243;
+  const alignmentOffset = -40;
+  
+  // Stop scrolling if we're beyond the total number of slides
+  const effectiveSlideNumber = Math.min(slideNumber, totalSlides);
+  const offsetTop = Math.max(0, (effectiveSlideNumber - 1) * pageHeight + alignmentOffset);
+  
+  // Calculate maximum allowed offset to prevent scrolling past content
+  const maxOffset = Math.max(0, (totalSlides - 1) * pageHeight + alignmentOffset);
+  const boundedOffsetTop = Math.min(offsetTop, maxOffset);
 
   return (
     <Card className={`bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-2xl rounded-2xl overflow-hidden ${className}`}>
@@ -68,11 +76,11 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
               <div className="relative h-[300px] overflow-hidden rounded-lg">
                 <iframe 
                   ref={ref}
-                  src={pdfUrl.split('#')[0]} // Remove any existing fragments
+                  src={pdfUrl.split('#')[0]}
                   className="w-full border-0 transition-transform duration-500 ease-in-out"
                   style={{ 
-                    height: '3000px', // Make it tall enough for multiple pages
-                    transform: `translateY(-${offsetTop}px)` // Offset to show the correct page with alignment
+                    height: '3000px',
+                    transform: `translateY(-${boundedOffsetTop}px)`
                   }}
                   title={`PDF Viewer - ${fileName}`}
                 />

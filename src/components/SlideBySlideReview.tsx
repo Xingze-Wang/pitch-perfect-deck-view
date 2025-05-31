@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,6 +71,9 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
   const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? actualSlides[0].pdfUrl : undefined;
+  
+  // Calculate total slides from either actualSlides or slideAnalysis
+  const totalSlides = actualSlides?.length || slideAnalysis.length;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -94,6 +96,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           fileName={fileName}
           slideImageUrl={slideImageUrl}
           pdfUrl={pdfUrl}
+          totalSlides={totalSlides}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 
