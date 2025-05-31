@@ -9,7 +9,6 @@ interface PPTPreviewProps {
   slideImageUrl?: string;
   pdfUrl?: string;
   className?: string;
-  totalSlides?: number; // Add total slides count
 }
 
 const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({ 
@@ -17,8 +16,7 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   fileName, 
   slideImageUrl,
   pdfUrl,
-  className = '',
-  totalSlides = 1 // Default to 1 if not provided
+  className = '' 
 }, ref) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
@@ -45,14 +43,11 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   const hasPdfUrl = pdfUrl && pdfUrl.length > 0;
   const showError = !hasValidImage && !hasPdfUrl || imageError;
 
-  // Calculate the offset for the PDF viewer dynamically based on total slides
-  // Estimate iframe height needed and divide by total slides to get page height
-  const estimatedIframeHeight = 3000; // Total iframe height
-  const pageHeight = Math.floor(estimatedIframeHeight / totalSlides * 0.9); // 90% to account for spacing
-  const alignmentOffset = -Math.floor(pageHeight * 0.15); // 15% of page height for alignment
+  // Calculate the offset for the PDF viewer - reduced by another 10%
+  // Page height reduced from 270 to 243 (10% less), alignment offset from -45 to -40.5
+  const pageHeight = 243; // Reduced from 270 to 243 (10% less)
+  const alignmentOffset = -40; // Reduced from -45 to approximately -40 (10% less)
   const offsetTop = (slideNumber - 1) * pageHeight + alignmentOffset;
-
-  console.log('PDF pagination - Slide:', slideNumber, 'Total slides:', totalSlides, 'Page height:', pageHeight, 'Offset:', offsetTop);
 
   return (
     <Card className={`bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-2xl rounded-2xl overflow-hidden ${className}`}>
@@ -76,8 +71,8 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
                   src={pdfUrl.split('#')[0]} // Remove any existing fragments
                   className="w-full border-0 transition-transform duration-500 ease-in-out"
                   style={{ 
-                    height: `${estimatedIframeHeight}px`, // Use dynamic height
-                    transform: `translateY(-${offsetTop}px)` // Dynamic offset based on actual slides
+                    height: '3000px', // Make it tall enough for multiple pages
+                    transform: `translateY(-${offsetTop}px)` // Offset to show the correct page with alignment
                   }}
                   title={`PDF Viewer - ${fileName}`}
                 />

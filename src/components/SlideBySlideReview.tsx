@@ -72,9 +72,6 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const actualSlide = actualSlides?.find(slide => slide.slideNumber === currentAnalysis.slideNumber);
   const slideImageUrl = actualSlide?.imageUrl;
   const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? actualSlides[0].pdfUrl : undefined;
-  
-  // Get total slides count from slideAnalysis length
-  const totalSlides = slideAnalysis.length;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -97,7 +94,6 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           fileName={fileName}
           slideImageUrl={slideImageUrl}
           pdfUrl={pdfUrl}
-          totalSlides={totalSlides}
           className="min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]"
         />
 
