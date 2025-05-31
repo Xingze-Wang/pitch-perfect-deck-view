@@ -113,27 +113,28 @@ ${investor.prompt}
 2. 评分要真实反映${investor.title}的投资标准和风险偏好
 3. 根据文件名推测可能的行业和商业模式，给出针对性分析
 4. 生成的内容要具体、可执行，避免空泛的建议
+5. 请务必使用真实、变化的评分，不要使用固定数值
 
 【评分维度说明】
-- reliability (靠谱): 项目的可行性、执行能力、风险控制
-- confidence (自信): 创始人和团队的表达自信度、对项目的信心
-- market (市场): 市场机会、竞争分析、商业模式
-- team (团队): 团队配置、背景、互补性
-- cognition (认知): 对行业、用户、趋势的认知深度
+- reliability (靠谱): 项目的可行性、执行能力、风险控制 (请给出30-95之间的真实评分)
+- confidence (自信): 创始人和团队的表达自信度、对项目的信心 (请给出30-95之间的真实评分)
+- market (市场): 市场机会、竞争分析、商业模式 (请给出30-95之间的真实评分)
+- team (团队): 团队配置、背景、互补性 (请给出30-95之间的真实评分)
+- cognition (认知): 对行业、用户、趋势的认知深度 (请给出30-95之间的真实评分)
 
 【输出要求】
-请直接以JSON格式回复，不要包含任何其他文字说明。
+请直接以JSON格式回复，不要包含任何其他文字说明。确保overallScore是上述五个维度的合理平均值。
 
-请确保回复内容严格按照JSON格式，基于${investor.title}的专业视角给出真实的、每次都不同的评分和建议。
+请确保每次分析都生成不同的、真实的评分，基于${investor.title}的专业视角。
 
 {
-  "overallScore": 82,
+  "overallScore": 请计算上述五个维度的平均值,
   "metrics": {
-    "reliability": 85,
-    "confidence": 78,
-    "market": 88,
-    "team": 80,
-    "cognition": 79
+    "reliability": 请给出真实的30-95之间的评分,
+    "confidence": 请给出真实的30-95之间的评分,
+    "market": 请给出真实的30-95之间的评分,
+    "team": 请给出真实的30-95之间的评分,
+    "cognition": 请给出真实的30-95之间的评分
   },
   "insights": [
     "基于文件名分析的具体行业洞察",
@@ -232,6 +233,7 @@ ${investor.prompt}
 
   try {
     console.log(`Calling Gemini API for ${investor.title} analysis with seed: ${randomSeed}...`);
+    console.log('Prompt being sent to Gemini:', prompt.substring(0, 500) + '...');
     
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -245,9 +247,9 @@ ${investor.prompt}
           }]
         }],
         generationConfig: {
-          temperature: 0.9, // 提高随机性，确保每次都不同
-          topK: 40,
-          topP: 0.95,
+          temperature: 0.95, // 增加随机性，确保每次都不同
+          topK: 50,
+          topP: 0.98,
           maxOutputTokens: 8192,
         }
       })
@@ -256,12 +258,13 @@ ${investor.prompt}
     console.log('Gemini API response status:', response.status);
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status, response.statusText);
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Gemini API error details:', errorText);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Raw Gemini response:', data);
+    console.log('Raw Gemini response received, checking structure...');
     
     const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
@@ -270,7 +273,7 @@ ${investor.prompt}
       throw new Error('No analysis text received from Gemini');
     }
 
-    console.log('Analysis text from Gemini:', analysisText);
+    console.log('Analysis text from Gemini (first 200 chars):', analysisText.substring(0, 200));
 
     // Clean the text and extract JSON
     let cleanedText = analysisText.trim();
@@ -284,16 +287,25 @@ ${investor.prompt}
     
     if (jsonStart === -1 || jsonEnd === -1) {
       console.error('No valid JSON braces found in response');
+      console.error('Full response text:', cleanedText);
       throw new Error('No valid JSON structure found in response');
     }
     
     const jsonText = cleanedText.substring(jsonStart, jsonEnd + 1);
-    console.log('Extracted JSON text:', jsonText);
+    console.log('Extracted JSON text (first 300 chars):', jsonText.substring(0, 300));
 
     let analysis;
     try {
       analysis = JSON.parse(jsonText);
-      console.log('Successfully parsed analysis from Gemini:', analysis);
+      console.log('Successfully parsed analysis from Gemini');
+      console.log('Parsed scores:', {
+        overall: analysis.overallScore,
+        reliability: analysis.metrics?.reliability,
+        confidence: analysis.metrics?.confidence,
+        market: analysis.metrics?.market,
+        team: analysis.metrics?.team,
+        cognition: analysis.metrics?.cognition
+      });
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Failed to parse JSON:', jsonText);
@@ -307,7 +319,7 @@ ${investor.prompt}
     }
     
     if (!analysis.overallScore || typeof analysis.overallScore !== 'number') {
-      console.error('Invalid overallScore in response');
+      console.error('Invalid overallScore in response:', analysis.overallScore);
       throw new Error('Invalid overallScore from Gemini');
     }
     
@@ -320,10 +332,18 @@ ${investor.prompt}
     const requiredMetrics = ['reliability', 'confidence', 'market', 'team', 'cognition'];
     for (const metric of requiredMetrics) {
       if (typeof analysis.metrics[metric] !== 'number') {
-        console.error(`Missing or invalid metric: ${metric}`);
+        console.error(`Missing or invalid metric: ${metric}`, analysis.metrics[metric]);
         throw new Error(`Invalid metric: ${metric}`);
       }
     }
+    
+    console.log('Final analysis being returned:', {
+      overallScore: analysis.overallScore,
+      metrics: analysis.metrics,
+      hasInsights: analysis.insights?.length || 0,
+      hasRecommendations: analysis.recommendations?.length || 0,
+      hasSlideAnalysis: analysis.slideAnalysis?.length || 0
+    });
     
     return analysis;
   } catch (error) {
