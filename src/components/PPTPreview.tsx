@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { FileText, Presentation, AlertCircle } from 'lucide-react';
@@ -44,10 +42,10 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   const hasPdfUrl = pdfUrl && pdfUrl.length > 0;
   const showError = !hasValidImage && !hasPdfUrl || imageError;
 
-  // Calculate the offset for the PDF viewer
-  // Assuming each page is roughly 300px tall, offset by (slideNumber - 1) * 300px + 30px for alignment
-  const pageHeight = 300;
-  const alignmentOffset = -50;
+  // Calculate the offset for the PDF viewer - reduced by 10%
+  // Assuming each page is roughly 300px tall, offset by (slideNumber - 1) * 270px + 45px for alignment
+  const pageHeight = 270; // Reduced from 300 to 270 (10% less)
+  const alignmentOffset = -45; // Reduced from -50 to -45 (10% less)
   const offsetTop = (slideNumber - 1) * pageHeight + alignmentOffset;
 
   return (
@@ -144,4 +142,3 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
 PPTPreview.displayName = 'PPTPreview';
 
 export default PPTPreview;
-
