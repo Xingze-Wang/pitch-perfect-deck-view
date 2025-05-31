@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -160,7 +161,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
       </div>
 
       {/* Navigation */}
-      <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
+      <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-5">
         <Button
           onClick={prevSlide}
           disabled={currentSlide === 0}
@@ -171,14 +172,14 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           <span>上一页</span>
         </Button>
 
-        <div className="flex space-x-2">
+        <div className="flex space-x-1.5">
           {slideAnalysis.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
                 index === currentSlide
-                  ? 'bg-blue-600 scale-125'
+                  ? 'bg-blue-600 scale-110'
                   : 'bg-gray-300 hover:bg-gray-400'
               }`}
             />
