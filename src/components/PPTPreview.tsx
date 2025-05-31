@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { FileText, Presentation, AlertCircle } from 'lucide-react';
@@ -9,6 +8,7 @@ interface PPTPreviewProps {
   slideImageUrl?: string;
   pdfUrl?: string;
   className?: string;
+  totalSlides?: number; // Add this prop to know total slides
 }
 
 const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({ 
@@ -16,16 +16,17 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   fileName, 
   slideImageUrl,
   pdfUrl,
-  className = '' 
+  className = '',
+  totalSlides = 1 // Default to 1 if not provided
 }, ref) => {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('PPTPreview - Slide:', slideNumber, 'Image URL available:', !!slideImageUrl, 'PDF URL available:', !!pdfUrl);
+    console.log('PPTPreview - Slide:', slideNumber, 'Total slides:', totalSlides, 'Image URL available:', !!slideImageUrl, 'PDF URL available:', !!pdfUrl);
     setImageError(false);
     setImageLoaded(false);
-  }, [slideNumber, slideImageUrl, pdfUrl]);
+  }, [slideNumber, slideImageUrl, pdfUrl, totalSlides]);
 
   const handleImageLoad = () => {
     console.log('Image loaded successfully for slide', slideNumber);
@@ -43,10 +44,11 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
   const hasPdfUrl = pdfUrl && pdfUrl.length > 0;
   const showError = !hasValidImage && !hasPdfUrl || imageError;
 
-  // Calculate the offset for the PDF viewer - reduced by another 10%
-  // Page height reduced from 270 to 243 (10% less), alignment offset from -45 to -40.5
-  const pageHeight = 243; // Reduced from 270 to 243 (10% less)
-  const alignmentOffset = -40; // Reduced from -45 to approximately -40 (10% less)
+  // Calculate the offset for the PDF viewer based on actual slide count
+  // Dynamically calculate page height based on total slides to fit the PDF properly
+  const baseHeight = 3000; // Total height of PDF iframe
+  const pageHeight = baseHeight / totalSlides; // Height per page
+  const alignmentOffset = -40; // Keep the same alignment offset
   const offsetTop = (slideNumber - 1) * pageHeight + alignmentOffset;
 
   return (
@@ -72,7 +74,7 @@ const PPTPreview = React.forwardRef<HTMLIFrameElement, PPTPreviewProps>(({
                   className="w-full border-0 transition-transform duration-500 ease-in-out"
                   style={{ 
                     height: '3000px', // Make it tall enough for multiple pages
-                    transform: `translateY(-${offsetTop}px)` // Offset to show the correct page with alignment
+                    transform: `translateY(-${offsetTop}px)` // Offset to show the correct page with dynamic calculation
                   }}
                   title={`PDF Viewer - ${fileName}`}
                 />
