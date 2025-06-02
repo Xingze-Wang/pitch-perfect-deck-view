@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,13 +29,27 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const pdfViewerRef = useRef<HTMLIFrameElement>(null);
 
+  // Debug logging for slide counting
+  console.log('🔍 SlideBySlideReview - Props received:');
+  console.log('🔍 SlideBySlideReview - slideAnalysis.length:', slideAnalysis.length);
+  console.log('🔍 SlideBySlideReview - actualSlides?.length:', actualSlides?.length);
+  console.log('🔍 SlideBySlideReview - fileName:', fileName);
+
   // Calculate the actual number of slides to display dots for
   const actualSlideCount = actualSlides?.length || slideAnalysis.length;
   
+  console.log('🔍 SlideBySlideReview - actualSlideCount calculated as:', actualSlideCount);
+  
   // Ensure current slide doesn't exceed actual slide count
   useEffect(() => {
+    console.log('🔍 SlideBySlideReview - useEffect triggered');
+    console.log('🔍 SlideBySlideReview - currentSlide:', currentSlide);
+    console.log('🔍 SlideBySlideReview - actualSlideCount:', actualSlideCount);
+    
     if (currentSlide >= actualSlideCount) {
-      setCurrentSlide(Math.max(0, actualSlideCount - 1));
+      const newSlide = Math.max(0, actualSlideCount - 1);
+      console.log('🔍 SlideBySlideReview - Adjusting currentSlide to:', newSlide);
+      setCurrentSlide(newSlide);
     }
   }, [actualSlideCount, currentSlide]);
 
@@ -75,8 +88,13 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const InvestorIcon = getInvestorIcon(investorType);
   const currentAnalysis = slideAnalysis[currentSlide];
 
+  console.log('🔍 SlideBySlideReview - currentSlide:', currentSlide);
+  console.log('🔍 SlideBySlideReview - currentAnalysis:', currentAnalysis);
+
   if (!currentAnalysis) {
-    console.log('No current analysis found, slideAnalysis:', slideAnalysis, 'currentSlide:', currentSlide);
+    console.log('❌ SlideBySlideReview - No current analysis found');
+    console.log('❌ SlideBySlideReview - slideAnalysis:', slideAnalysis);
+    console.log('❌ SlideBySlideReview - currentSlide:', currentSlide);
     return (
       <div className="text-center p-8">
         <p className="text-gray-500">无法加载幻灯片分析数据</p>
@@ -92,6 +110,10 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   // Calculate total slides from actual slides, fallback to analysis length
   const totalSlides = actualSlideCount;
   const maxDisplayableSlides = Math.min(slideAnalysis.length, actualSlideCount);
+
+  console.log('🔍 SlideBySlideReview - Final calculations:');
+  console.log('🔍 SlideBySlideReview - totalSlides:', totalSlides);
+  console.log('🔍 SlideBySlideReview - maxDisplayableSlides:', maxDisplayableSlides);
 
   return (
     <div className="space-y-6 sm:space-y-8">
