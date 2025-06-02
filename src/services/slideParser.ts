@@ -1,4 +1,3 @@
-
 export interface SlideData {
   slideNumber: number;
   imageUrl?: string;
@@ -44,10 +43,7 @@ export class SlideParser {
       
       console.log(`PDF loaded with ${totalPages} pages`);
       
-      // Create a blob URL for the PDF file for native viewing
-      const pdfUrl = URL.createObjectURL(file);
-      
-      // Create slide data for each page
+      // Render each page to canvas and extract as image
       for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
         const page = await pdf.getPage(pageNumber);
         
@@ -58,9 +54,28 @@ export class SlideParser {
           .join(' ')
           .trim();
         
+        // Create canvas and render the page
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+        const viewport = page.getViewport({ scale: 1.5 });
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+        
+        // Render the page to canvas
+        await page.render(renderContext).promise;
+        
+        // Convert canvas to image URL
+        const imageUrl = canvas.toDataURL('image/jpeg', 0.95);
+        
         slides.push({
           slideNumber: pageNumber,
-          pdfUrl: pdfUrl,
+          imageUrl: imageUrl,
           text: text || `Page ${pageNumber} content`
         });
       }
