@@ -8,21 +8,13 @@ export interface SlideData {
 
 export class SlideParser {
   static async parseFile(file: File): Promise<SlideData[]> {
-    console.log('Creating native PDF viewer for file:', file.name);
+    console.log('Parsing file:', file.name);
     
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
     if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-      // Create a blob URL for the PDF file
-      const pdfUrl = URL.createObjectURL(file);
-      
-      // Return a single slide data with the PDF URL for native viewing
-      return [{
-        slideNumber: 1,
-        pdfUrl: pdfUrl,
-        text: `PDF Document: ${file.name}`
-      }];
+      return await this.parsePDF(file);
     } else if (
       fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       fileType === 'application/vnd.ms-powerpoint' ||
@@ -35,6 +27,52 @@ export class SlideParser {
     }
   }
 
+  static async parsePDF(file: File): Promise<SlideData[]> {
+    try {
+      // Import PDF.js dynamically
+      const pdfjsLib = await import('pdfjs-dist');
+      
+      // Set worker source
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const typedArray = new Uint8Array(arrayBuffer);
+      
+      const pdf = await pdfjsLib.getDocument(typedArray).promise;
+      const totalPages = pdf.numPages;
+      const slides: SlideData[] = [];
+      
+      console.log(`PDF loaded with ${totalPages} pages`);
+      
+      // Create a blob URL for the PDF file for native viewing
+      const pdfUrl = URL.createObjectURL(file);
+      
+      // Create slide data for each page
+      for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber);
+        
+        // Extract text content from the page
+        const textContent = await page.getTextContent();
+        const text = textContent.items
+          .map((item: any) => item.str)
+          .join(' ')
+          .trim();
+        
+        slides.push({
+          slideNumber: pageNumber,
+          pdfUrl: pdfUrl,
+          text: text || `Page ${pageNumber} content`
+        });
+      }
+      
+      console.log(`Successfully parsed ${slides.length} slides from PDF`);
+      return slides;
+    } catch (error) {
+      console.error('Error parsing PDF:', error);
+      throw new Error(`Failed to parse PDF: ${error.message}`);
+    }
+  }
+
   static async parsePowerPoint(file: File): Promise<SlideData[]> {
     try {
       const PizZip = (await import('pizzip')).default;
@@ -43,9 +81,15 @@ export class SlideParser {
       const zip = new PizZip(arrayBuffer);
       const slides: SlideData[] = [];
 
-      const slideFiles = Object.keys(zip.files).filter(name => 
-        name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
-      );
+      const slideFiles = Object.keys(zip.files)
+        .filter(name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml'))
+        .sort((a, b) => {
+          const aNum = parseInt(a.match(/slide(\d+)\.xml/)?.[1] || '0');
+          const bNum = parseInt(b.match(/slide(\d+)\.xml/)?.[1] || '0');
+          return aNum - bNum;
+        });
+
+      console.log(`Found ${slideFiles.length} slides in PowerPoint`);
 
       for (let i = 0; i < slideFiles.length; i++) {
         const slideFile = slideFiles[i];
@@ -55,7 +99,8 @@ export class SlideParser {
           const textMatches = slideData.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) || [];
           const text = textMatches
             .map(match => match.replace(/<\/?[^>]+(>|$)/g, ''))
-            .join(' ');
+            .join(' ')
+            .trim();
 
           // Create a clean white slide without any placeholder text
           const canvas = document.createElement('canvas');
@@ -74,11 +119,12 @@ export class SlideParser {
           slides.push({
             slideNumber: i + 1,
             imageUrl: canvas.toDataURL('image/jpeg', 0.95),
-            text
+            text: text || `Slide ${i + 1} content`
           });
         }
       }
 
+      console.log(`Successfully parsed ${slides.length} slides from PowerPoint`);
       return slides;
     } catch (error) {
       console.error('Error parsing PowerPoint:', error);

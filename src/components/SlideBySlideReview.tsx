@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,12 +30,28 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const pdfViewerRef = useRef<HTMLIFrameElement>(null);
 
+  // Calculate the actual number of slides to display dots for
+  const actualSlideCount = actualSlides?.length || slideAnalysis.length;
+  
+  // Ensure current slide doesn't exceed actual slide count
+  useEffect(() => {
+    if (currentSlide >= actualSlideCount) {
+      setCurrentSlide(Math.max(0, actualSlideCount - 1));
+    }
+  }, [actualSlideCount, currentSlide]);
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => Math.min(prev + 1, slideAnalysis.length - 1));
+    setCurrentSlide((prev) => Math.min(prev + 1, Math.min(slideAnalysis.length - 1, actualSlideCount - 1)));
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  };
+
+  const goToSlide = (index: number) => {
+    if (index >= 0 && index < Math.min(slideAnalysis.length, actualSlideCount)) {
+      setCurrentSlide(index);
+    }
   };
 
   const getInvestorIcon = (type: InvestorType) => {
@@ -72,8 +89,9 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
   const slideImageUrl = actualSlide?.imageUrl;
   const pdfUrl = actualSlides && actualSlides[0]?.pdfUrl ? actualSlides[0].pdfUrl : undefined;
   
-  // Calculate total slides from either actualSlides or slideAnalysis
-  const totalSlides = actualSlides?.length || slideAnalysis.length;
+  // Calculate total slides from actual slides, fallback to analysis length
+  const totalSlides = actualSlideCount;
+  const maxDisplayableSlides = Math.min(slideAnalysis.length, actualSlideCount);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -86,6 +104,9 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           </div>
         </div>
         <p className="text-gray-500 text-sm sm:text-base truncate px-4">{fileName}</p>
+        <p className="text-gray-400 text-xs mt-1">
+          显示 {maxDisplayableSlides} 页分析 (共 {totalSlides} 页内容)
+        </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
@@ -108,7 +129,7 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
                 第 {currentAnalysis.slideNumber} 页 分析
               </h3>
               <div className="text-sm text-gray-500">
-                {currentSlide + 1} / {slideAnalysis.length}
+                {currentSlide + 1} / {maxDisplayableSlides}
               </div>
             </div>
 
@@ -175,23 +196,25 @@ const SlideBySlideReview: React.FC<SlideBySlideReviewProps> = ({
           <span>上一页</span>
         </Button>
 
-        <div className="flex space-x-1.5">
-          {slideAnalysis.map((_, index) => (
+        {/* Dynamic dots based on actual slide count */}
+        <div className="flex space-x-1.5 max-w-xs overflow-x-auto">
+          {Array.from({ length: maxDisplayableSlides }, (_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+              onClick={() => goToSlide(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 flex-shrink-0 ${
                 index === currentSlide
                   ? 'bg-blue-600 scale-110'
                   : 'bg-gray-300 hover:bg-gray-400'
               }`}
+              title={`跳转到第 ${index + 1} 页`}
             />
           ))}
         </div>
 
         <Button
           onClick={nextSlide}
-          disabled={currentSlide === slideAnalysis.length - 1}
+          disabled={currentSlide >= maxDisplayableSlides - 1}
           variant="outline"
           className="flex items-center space-x-2 w-full sm:w-auto"
         >
